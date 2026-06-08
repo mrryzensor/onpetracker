@@ -79,20 +79,16 @@ async function processAndSaveData(scrapedData) {
 }
 
 // Programar sincronización automática cada 5 minutos
-// (Solo se ejecuta si se establece explícitamente RUN_LOCAL_SCRAPER=true)
-if (process.env.RUN_LOCAL_SCRAPER === 'true') {
-  console.log('Ejecutando cron local en el servidor (RUN_LOCAL_SCRAPER=true)...');
-  cron.schedule('*/5 * * * *', async () => {
-    console.log('Cron triggered: Ejecutando verificación periódica...');
-    try {
-      await performSync();
-    } catch (err) {
-      console.error('Error en cron sync:', err);
-    }
-  });
-} else {
-  console.log('Cron local en el servidor DESACTIVADO (Modo Híbrido Activo). Esperando datos via POST /api/push.');
-}
+// (Habilitado por defecto para funcionamiento local)
+console.log('Ejecutando cron local de verificación automática (cada 5 minutos)...');
+cron.schedule('*/5 * * * *', async () => {
+  console.log('Cron triggered: Ejecutando verificación periódica...');
+  try {
+    await performSync();
+  } catch (err) {
+    console.error('Error en cron sync:', err);
+  }
+});
 
 // --- RUTA API ---
 
@@ -105,11 +101,8 @@ app.get('/api/sync-status', (req, res) => {
   });
 });
 
-// 2. Forzar sincronización manual (Solo si está habilitado el scraper local)
+// 2. Forzar sincronización manual (Sincroniza directamente usando el scraper en local)
 app.post('/api/sync', async (req, res) => {
-  if (process.env.RUN_LOCAL_SCRAPER !== 'true') {
-    return res.status(400).json({ success: false, error: 'El scraper local del servidor está deshabilitado. Se requiere sincronización vía local_scraper.js cliente.' });
-  }
   try {
     const result = await performSync();
     res.json(result);
@@ -179,12 +172,10 @@ db.initDatabase()
       console.log(`Servidor ONPE Tracker ejecutándose en http://localhost:${PORT}`);
       console.log(`=======================================================`);
       
-      // Solo realizar sincronización inicial si el scraper local está habilitado
-      if (process.env.RUN_LOCAL_SCRAPER === 'true') {
-        performSync()
-          .then(res => console.log('Sincronización inicial completada:', res))
-          .catch(err => console.error('Error en sincronización inicial:', err));
-      }
+      // Realizar sincronización inicial al levantar el servidor
+      performSync()
+        .then(res => console.log('Sincronización inicial completada:', res))
+        .catch(err => console.error('Error en sincronización inicial:', err));
     });
   })
   .catch((err) => {

@@ -540,7 +540,6 @@ function renderProjectionChart(history, m, c, currentPct) {
   const c2 = (sumY2 - m2 * sumX) / n;
   
   // Punto de quiebre (cruce)
-  // m1 * x + c1 = m2 * x + c2 => x = (c2 - c1) / (m1 - m2)
   let tiePct = null;
   if (Math.abs(m1 - m2) > 0.00001) {
     tiePct = (c2 - c1) / (m1 - m2);
@@ -589,6 +588,178 @@ function renderProjectionChart(history, m, c, currentPct) {
   const name1 = history[0].candidato1_nombre ? history[0].candidato1_nombre.split(' ')[0] : 'Keiko';
   const name2 = history[0].candidato2_nombre ? history[0].candidato2_nombre.split(' ')[0] : 'Roberto';
   
+  // Definición del plugin para dibujar globos de texto personalizados en canvas
+  const customBalloonsPlugin = {
+    id: 'customBalloons',
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea: { top, bottom }, scales: { x, y } } = chart;
+      ctx.save();
+
+      // Auxiliar: Dibujar rectángulos con bordes redondeados
+      function roundRect(ctx, rx, ry, w, h, radius, fill, stroke) {
+        ctx.beginPath();
+        ctx.moveTo(rx + radius, ry);
+        ctx.lineTo(rx + w - radius, ry);
+        ctx.quadraticCurveTo(rx + w, ry, rx + w, ry + radius);
+        ctx.lineTo(rx + w, ry + h - radius);
+        ctx.quadraticCurveTo(rx + w, ry + h, rx + w - radius, ry + h);
+        ctx.lineTo(rx + radius, ry + h);
+        ctx.quadraticCurveTo(rx, ry + h, rx, ry + h - radius);
+        ctx.lineTo(rx, ry + radius);
+        ctx.quadraticCurveTo(rx, ry, rx + radius, ry);
+        ctx.closePath();
+        if (fill) ctx.fill();
+        if (stroke) ctx.stroke();
+      }
+
+      // Auxiliar: Dibujar pequeñas etiquetas de porcentaje junto a los puntos
+      function drawTextBadge(ctx, bx, by, text, color, alignLeft = false) {
+        ctx.font = 'bold 8px Poppins';
+        const w = ctx.measureText(text).width + 6;
+        const h = 13;
+        ctx.fillStyle = color;
+        const startX = alignLeft ? bx : bx - w / 2;
+        roundRect(ctx, startX, by - h/2, w, h, 3, true, false);
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.fillText(text, startX + w / 2, by + 3.5);
+      }
+
+      // 1. DIBUJAR LÍNEA VERTICAL Y GLOBO PARA "ACTUAL"
+      const actualXPixel = x.getPixelForValue(currentPct);
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)'; // Celeste semitransparente
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(actualXPixel, top);
+      ctx.lineTo(actualXPixel, bottom);
+      ctx.stroke();
+      ctx.setLineDash([]); // Resetear patrón
+      
+      // Globo "ACTUAL" arriba
+      ctx.fillStyle = '#0284c7';
+      const actW = 82;
+      const actH = 29;
+      const actY = top - 34;
+      roundRect(ctx, actualXPixel - actW / 2, actY, actW, actH, 4, true, false);
+      
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 7px Poppins';
+      ctx.fillText('ACTUAL', actualXPixel, actY + 9);
+      ctx.font = 'bold 9px Poppins';
+      ctx.fillText(`${currentPct.toFixed(3)}%`, actualXPixel, actY + 18);
+      ctx.font = 'normal 6px Poppins';
+      ctx.fillText('actas contabilizadas', actualXPixel, actY + 25);
+
+      // 2. DIBUJAR LÍNEA VERTICAL Y GLOBO PARA "PROYECCIÓN FINAL"
+      const finalXPixel = x.getPixelForValue(100);
+      ctx.strokeStyle = 'rgba(14, 159, 110, 0.45)'; // Verde semitransparente
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(finalXPixel, top);
+      ctx.lineTo(finalXPixel, bottom);
+      ctx.stroke();
+      ctx.setLineDash([]); // Reset
+      
+      // Globo "PROYECCIÓN FINAL" arriba
+      ctx.fillStyle = '#1e3a8a';
+      const projW = 82;
+      const projH = 29;
+      const projY = top - 34;
+      roundRect(ctx, finalXPixel - projW / 2, projY, projW, projH, 4, true, false);
+      
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 7px Poppins';
+      ctx.fillText('PROYECCIÓN FINAL', finalXPixel, projY + 9);
+      ctx.font = 'bold 9px Poppins';
+      ctx.fillText('100%', finalXPixel, projY + 18);
+      ctx.font = 'normal 6px Poppins';
+      ctx.fillText('actas contabilizadas', finalXPixel, projY + 25);
+
+      // 3. DIBUJAR GLOBO DEL PUNTO DE QUIEBRE
+      if (tiePct !== null && tiePct > currentPct && tiePct <= 100) {
+        const breakX = x.getPixelForValue(tiePct);
+        const breakY = y.getPixelForValue(50.00);
+        
+        ctx.fillStyle = '#151824'; // Fondo oscuro a tono con la interfaz
+        ctx.strokeStyle = '#a855f7'; // Borde púrpura
+        ctx.lineWidth = 1.5;
+        
+        const txt1 = 'PUNTO DE QUIEBRE';
+        const txt2 = `Cruce estimado: ${tiePct.toFixed(2)}%`;
+        const txt3 = 'Ambos: 50.00%';
+        
+        ctx.font = 'bold 8px Poppins';
+        const w1 = ctx.measureText(txt1).width;
+        ctx.font = 'normal 8px Poppins';
+        const w2 = ctx.measureText(txt2).width;
+        const w3 = ctx.measureText(txt3).width;
+        const width = Math.max(w1, w2, w3) + 12;
+        const height = 38;
+        
+        const rectX = breakX - width / 2;
+        const rectY = breakY - height - 8;
+        
+        roundRect(ctx, rectX, rectY, width, height, 5, true, true);
+        
+        // Flechita apuntadora
+        ctx.beginPath();
+        ctx.moveTo(breakX - 5, rectY + height);
+        ctx.lineTo(breakX, rectY + height + 5);
+        ctx.lineTo(breakX + 5, rectY + height);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        
+        // Dibujar textos dentro del globo
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 8px Poppins';
+        ctx.fillText(txt1, breakX, rectY + 11);
+        ctx.font = 'normal 7.5px Poppins';
+        ctx.fillText(txt2, breakX, rectY + 21);
+        ctx.fillText(txt3, breakX, rectY + 31);
+      }
+
+      // 4. DIBUJAR VALORES EN LOS PUNTOS ACTUALES
+      if (actualK.length > 0 && actualR.length > 0) {
+        const ptK = actualK[actualK.length - 1];
+        const ptR = actualR[actualR.length - 1];
+        
+        const pixelXK = x.getPixelForValue(ptK.x);
+        const pixelYK = y.getPixelForValue(ptK.y);
+        const pixelXR = x.getPixelForValue(ptR.x);
+        const pixelYR = y.getPixelForValue(ptR.y);
+        
+        // Keiko actual
+        drawTextBadge(ctx, pixelXK - 38, pixelYK - 9, `K ${ptK.y.toFixed(3)}%`, '#ea580c');
+        // Roberto actual
+        drawTextBadge(ctx, pixelXR - 38, pixelYR + 9, `JP ${ptR.y.toFixed(3)}%`, '#0e9f6e');
+      }
+
+      // 5. DIBUJAR VALORES AL FINAL DE LA PROYECCIÓN (100%)
+      if (projK.length > 0 && projR.length > 0) {
+        const ptK = projK[projK.length - 1];
+        const ptR = projR[projR.length - 1];
+        
+        const pixelXK = x.getPixelForValue(ptK.x);
+        const pixelYK = y.getPixelForValue(ptK.y);
+        const pixelXR = x.getPixelForValue(ptR.x);
+        const pixelYR = y.getPixelForValue(ptR.y);
+        
+        // Keiko final
+        drawTextBadge(ctx, pixelXK + 8, pixelYK, `${ptK.y.toFixed(2)}%`, '#ea580c', true);
+        // Roberto final
+        drawTextBadge(ctx, pixelXR + 8, pixelYR, `${ptR.y.toFixed(2)}%`, '#0e9f6e', true);
+      }
+
+      ctx.restore();
+    }
+  };
+
   if (projectionChartInstance) {
     projectionChartInstance.destroy();
   }
@@ -649,17 +820,24 @@ function renderProjectionChart(history, m, c, currentPct) {
           data: breakPointData,
           borderColor: '#a855f7', // Púrpura llamativo para el cruce
           backgroundColor: '#a855f7',
-          pointRadius: 8,
-          pointHoverRadius: 10,
-          pointStyle: 'rectRounded',
+          pointRadius: 7,
+          pointHoverRadius: 9,
+          pointStyle: 'circle',
           showLine: false,
           fill: false
         }
       ]
     },
+    plugins: [customBalloonsPlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: {
+          top: 38,
+          right: 32 // espacio para que las etiquetas finales del 100% no se salgan
+        }
+      },
       plugins: {
         legend: {
           display: true,
