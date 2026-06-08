@@ -1,0 +1,23 @@
+{
+  "name": "onpe-tracker",
+  "version": "1.0.0",
+  "description": "Monitoreo y registro local de resultados electorales de la ONPE",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "node-cron": "^3.0.3",
+    "puppeteer": "^22.10.0",
+    "sqlite3": "^5.1.7"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "puppeteer",
+      "sqlite3"
+    ]
+  }
+}

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ONPE Tracker - Diferencia de Votos en Tiempo Real</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-area">
+        <div class="logo-icon"><i class="fa-solid fa-chart-line-up"></i></div>
+        <div>
+          <h1>ONPE Tracker <span>Local</span></h1>
+          <p class="subtitle">Monitoreo y registro histórico de la segunda vuelta</p>
+        </div>
+      </div>
+      <div class="sync-actions">
+        <div class="sync-info">
+          <span id="sync-status-indicator" class="status-indicator idle"></span>
+          <span id="sync-status-text">Inactivo</span>
+          <span class="divider">|</span>
+          <span class="last-sync-time">Última sincronización: <b id="last-sync-time-val">-</b></span>
+        </div>
+        <button id="btn-sync" class="btn btn-primary">
+          <i class="fa-solid fa-rotate"></i> Sincronizar Ahora
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Grid Layout -->
+    <main class="main-grid">
+      
+      <!-- Actas Card -->
+      <section class="card actas-card full-width">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-file-invoice"></i> Estado General de Actas</h2>
+          <span class="onpe-timestamp" id="onpe-timestamp-val">Cargando...</span>
+        </div>
+        <div class="actas-grid">
+          <div class="actas-metric">
+            <span class="metric-label">Actas Contabilizadas</span>
+            <span class="metric-value" id="actas-contabilizadas-val">-</span>
+            <span class="metric-percentage" id="actas-contabilizadas-pct-val">- %</span>
+          </div>
+          <div class="actas-progress-container">
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar" id="actas-progress-bar" style="width: 0%"></div>
+            </div>
+            <div class="progress-labels">
+              <span>0%</span>
+              <span id="progress-middle-label">Procesando</span>
+              <span>100%</span>
+            </div>
+          </div>
+          <div class="actas-details">
+            <div class="detail-item">
+              <span class="color-dot jec"></span>
+              <span>Para Envío JEE: <strong id="actas-jee-val">-</strong> (<span id="actas-jee-pct-val">- %</span>)</span>
+            </div>
+            <div class="detail-item">
+              <span class="color-dot pendientes"></span>
+              <span>Pendientes de Resolver: <strong id="actas-pendientes-val">-</strong> (<span id="actas-pendientes-pct-val">- %</span>)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Candidates Score Card -->
+      <section class="card candidates-card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-users"></i> Resultados Presidenciales</h2>
+        </div>
+        <div class="candidates-split">
+          
+          <!-- Candidate 1 -->
+          <div class="candidate-row candidate-left">
+            <div class="candidate-avatar">
+              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" alt="Keiko Fujimori" class="candidate-photo">
+            </div>
+            <div class="candidate-meta">
+              <h3 id="c1-name">Candidato A</h3>
+              <p class="party-name" id="c1-party">Fuerza Popular</p>
+              <div class="votes-num" id="c1-votes">- votos</div>
+            </div>
+            <div class="candidate-pct-badge pct-c1" id="c1-pct">
+              - %
+            </div>
+          </div>
+
+          <div class="vs-divider">VS</div>
+
+          <!-- Candidate 2 -->
+          <div class="candidate-row candidate-right">
+            <div class="candidate-avatar">
+              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" alt="Roberto Sánchez" class="candidate-photo">
+            </div>
+            <div class="candidate-meta">
+              <h3 id="c2-name">Candidato B</h3>
+              <p class="party-name" id="c2-party">Juntos Por El Perú</p>
+              <div class="votes-num" id="c2-votes">- votos</div>
+            </div>
+            <div class="candidate-pct-badge pct-c2" id="c2-pct">
+              - %
+            </div>
+          </div>
+        </div>
+
+        <!-- Brecha / Gap bar -->
+        <div class="gap-bar-section">
+          <div class="gap-bar-header">
+            <span>Diferencia Actual</span>
+            <span class="gap-difference-value" id="gap-difference-val">- votos</span>
+          </div>
+          <div class="gap-visual-bar">
+            <div class="gap-indicator" id="gap-indicator" style="left: 50%;"></div>
+            <div class="gap-center-line"></div>
+          </div>
+          <div class="gap-bar-footer">
+            <span id="gap-leader-left">-</span>
+            <span id="gap-leader-right">-</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- History Graph Card -->
+      <section class="card graph-card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-chart-line"></i> Evolución Histórica de la Brecha</h2>
+          <span class="hint-text">Registros acumulados en tu DB local</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="historyChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Projection Card -->
+      <section class="card projection-card full-width">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-calculator"></i> Proyección Estadística del Escrutinio</h2>
+          <span class="hint-text">Cálculo de tendencia lineal (regresión sobre actas escrutadas)</span>
+        </div>
+        <div class="projection-grid">
+          <div class="projection-metric">
+            <span class="metric-label">Hora Estimada de Empate</span>
+            <span class="metric-value" id="proj-tie-time">-</span>
+            <span class="metric-percentage" id="proj-tie-pct">al -% de actas</span>
+          </div>
+          <div class="projection-metric">
+            <span class="metric-label">Diferencia Final Proyectada (al 100%)</span>
+            <span class="metric-value" id="proj-final-diff">-</span>
+            <span class="metric-percentage" id="proj-final-winner">Cargando...</span>
+            <span class="hint-text" id="proj-final-pcts" style="margin-top: 0.4rem; font-size: 0.95rem; color: #fff; font-weight: 600;">-</span>
+          </div>
+        </div>
+        <div class="chart-container projection-chart-container">
+          <canvas id="projectionChart"></canvas>
+        </div>
+      </section>
+
+      <!-- History Table / Log -->
+      <section class="card table-card full-width">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-history"></i> Registro Histórico de Actualizaciones</h2>
+        </div>
+        <div class="table-responsive">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Fecha de Registro</th>
+                <th>Fecha ONPE</th>
+                <th>Actas Cont.</th>
+                <th id="th-c1">Candidato A</th>
+                <th id="th-c2">Candidato B</th>
+                <th>Diferencia</th>
+                <th>Ventaja de</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body">
+              <tr>
+                <td colspan="7" class="empty-state">No hay registros aún en la base de datos local.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>ONPE Tracker Local &copy; 2026 - Conexión directa con la ONPE a través de Puppeteer y SQLite</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

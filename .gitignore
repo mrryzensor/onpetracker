@@ -1,0 +1,7 @@
+node_modules/
+.pnpm-store/
+.cache/
+onpe_data.db
+onpe_data.db-journal
+.env
+onpe_dom.html
