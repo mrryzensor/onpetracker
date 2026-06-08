@@ -499,63 +499,161 @@ function updateProjection(history) {
 function renderProjectionChart(history, m, c, currentPct) {
   const ctx = document.getElementById('projectionChart').getContext('2d');
   
-  const labels = [];
-  const actualData = [];
-  const projectedData = [];
-  
-  // Rellenar datos reales
-  history.forEach(row => {
-    labels.push(`${row.actas_contabilizadas_pct.toFixed(2)}%`);
-    const diff = row.candidato1_votos - row.candidato2_votos;
-    actualData.push(diff);
-    projectedData.push(null);
-  });
-  
-  // Unir las líneas en el último punto
-  if (actualData.length > 0) {
-    projectedData[projectedData.length - 1] = actualData[actualData.length - 1];
+  // Calcular regresión para Keiko (Candidato 1)
+  const uniquePoints = [];
+  const seenPct = new Set();
+  for (let i = 0; i < history.length; i++) {
+    const pct = history[i].actas_contabilizadas_pct;
+    if (!seenPct.has(pct)) {
+      seenPct.add(pct);
+      uniquePoints.push({
+        x: pct,
+        y1: history[i].candidato1_pct,
+        y2: history[i].candidato2_pct
+      });
+    }
   }
   
-  // Generar puntos proyectados en los hitos
-  const steps = [94, 95, 96, 97, 98, 99, 100];
-  steps.forEach(pct => {
-    if (pct > currentPct) {
-      labels.push(`${pct.toFixed(2)}% (Proj)`);
-      actualData.push(null);
-      const projDiff = m * pct + c;
-      projectedData.push(Math.round(projDiff));
-    }
+  if (uniquePoints.length < 2) return;
+  
+  // Regresión lineal para Keiko: y1 = m1 * x + c1
+  // Regresión lineal para Roberto: y2 = m2 * x + c2
+  const n = uniquePoints.length;
+  let sumX = 0, sumY1 = 0, sumY2 = 0, sumXY1 = 0, sumXY2 = 0, sumXX = 0;
+  for (let i = 0; i < n; i++) {
+    const p = uniquePoints[i];
+    sumX += p.x;
+    sumY1 += p.y1;
+    sumY2 += p.y2;
+    sumXY1 += p.x * p.y1;
+    sumXY2 += p.x * p.y2;
+    sumXX += p.x * p.x;
+  }
+  
+  const denominator = (n * sumXX - sumX * sumX);
+  if (denominator === 0) return;
+  
+  const m1 = (n * sumXY1 - sumX * sumY1) / denominator;
+  const c1 = (sumY1 - m1 * sumX) / n;
+  
+  const m2 = (n * sumXY2 - sumX * sumY2) / denominator;
+  const c2 = (sumY2 - m2 * sumX) / n;
+  
+  // Punto de quiebre (cruce)
+  // m1 * x + c1 = m2 * x + c2 => x = (c2 - c1) / (m1 - m2)
+  let tiePct = null;
+  if (Math.abs(m1 - m2) > 0.00001) {
+    tiePct = (c2 - c1) / (m1 - m2);
+  }
+  
+  // Generar datos reales para graficar (como objetos {x, y})
+  const actualK = [];
+  const actualR = [];
+  history.forEach(row => {
+    actualK.push({ x: row.actas_contabilizadas_pct, y: row.candidato1_pct });
+    actualR.push({ x: row.actas_contabilizadas_pct, y: row.candidato2_pct });
   });
+  
+  // Generar datos proyectados (desde el actualPct hasta 100%)
+  const projK = [];
+  const projR = [];
+  
+  // Empezar en el último punto real para continuidad
+  if (actualK.length > 0) {
+    projK.push({ x: currentPct, y: actualK[actualK.length - 1].y });
+    projR.push({ x: currentPct, y: actualR[actualR.length - 1].y });
+  }
+  
+  // Agregar puntos intermedios y el 100%
+  const startPct = Math.ceil(currentPct);
+  for (let pct = startPct; pct <= 100; pct++) {
+    let y1 = m1 * pct + c1;
+    let y2 = m2 * pct + c2;
+    // Normalizar
+    const total = y1 + y2;
+    if (total > 0) {
+      y1 = (y1 / total) * 100;
+      y2 = (y2 / total) * 100;
+    }
+    projK.push({ x: pct, y: y1 });
+    projR.push({ x: pct, y: y2 });
+  }
+  
+  // Dataset para el Punto de Quiebre (si está en el rango visible futuro)
+  const breakPointData = [];
+  if (tiePct !== null && tiePct > currentPct && tiePct <= 100) {
+    breakPointData.push({ x: tiePct, y: 50.00 });
+  }
+
+  // Nombre de los candidatos para las etiquetas
+  const name1 = history[0].candidato1_nombre ? history[0].candidato1_nombre.split(' ')[0] : 'Keiko';
+  const name2 = history[0].candidato2_nombre ? history[0].candidato2_nombre.split(' ')[0] : 'Roberto';
   
   if (projectionChartInstance) {
     projectionChartInstance.destroy();
   }
   
+  // Determinar el rango mínimo de X para hacer zoom
+  const xMin = Math.max(0, Math.floor(Math.min(...history.map(r => r.actas_contabilizadas_pct)) - 2));
+  
   projectionChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: labels,
       datasets: [
         {
-          label: 'Diferencia Real (Votos)',
-          data: actualData,
-          borderColor: '#38bdf8',
+          label: `${name1} (Real)`,
+          data: actualK,
+          borderColor: '#ea580c', // Naranja Keiko
+          backgroundColor: 'transparent',
           borderWidth: 3,
-          fill: false,
+          pointRadius: 4,
+          pointBackgroundColor: '#ea580c',
           tension: 0.2,
-          pointBackgroundColor: '#fff',
-          pointBorderColor: '#38bdf8',
+          fill: false
         },
         {
-          label: 'Tendencia Proyectada (Regresión)',
-          data: projectedData,
-          borderColor: '#ff6c00',
+          label: `${name1} (Proyección)`,
+          data: projK,
+          borderColor: '#ea580c',
+          backgroundColor: 'transparent',
           borderWidth: 2,
-          borderDash: [6, 6],
-          fill: false,
+          borderDash: [5, 5],
+          pointRadius: 0,
           tension: 0.1,
-          pointBackgroundColor: '#ff6c00',
-          pointBorderColor: '#fff',
+          fill: false
+        },
+        {
+          label: `${name2} (Real)`,
+          data: actualR,
+          borderColor: '#0e9f6e', // Verde Roberto
+          backgroundColor: 'transparent',
+          borderWidth: 3,
+          pointRadius: 4,
+          pointBackgroundColor: '#0e9f6e',
+          tension: 0.2,
+          fill: false
+        },
+        {
+          label: `${name2} (Proyección)`,
+          data: projR,
+          borderColor: '#0e9f6e',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          pointRadius: 0,
+          tension: 0.1,
+          fill: false
+        },
+        {
+          label: 'Punto de Quiebre',
+          data: breakPointData,
+          borderColor: '#a855f7', // Púrpura llamativo para el cruce
+          backgroundColor: '#a855f7',
+          pointRadius: 8,
+          pointHoverRadius: 10,
+          pointStyle: 'rectRounded',
+          showLine: false,
+          fill: false
         }
       ]
     },
@@ -567,7 +665,7 @@ function renderProjectionChart(history, m, c, currentPct) {
           display: true,
           labels: {
             color: '#8b949e',
-            font: { family: 'Poppins' }
+            font: { family: 'Poppins', size: 11 }
           }
         },
         tooltip: {
@@ -578,30 +676,42 @@ function renderProjectionChart(history, m, c, currentPct) {
           borderWidth: 1,
           padding: 12,
           callbacks: {
+            title: function(context) {
+              const xVal = context[0].parsed.x;
+              return `Actas Contabilizadas: ${xVal.toFixed(3)}%`;
+            },
             label: function(context) {
-              const val = context.parsed.y;
-              if (val === null || val === undefined) return '';
-              const prefix = context.datasetIndex === 0 ? 'Real' : 'Proyectado';
-              if (val > 0) {
-                return `${prefix}: Lidera Keiko por: ${formatNumber(Math.abs(val))} votos`;
-              } else if (val < 0) {
-                return `${prefix}: Lidera Roberto por: ${formatNumber(Math.abs(val))} votos`;
-              } else {
-                return `${prefix}: Empate absoluto`;
+              const datasetLabel = context.dataset.label;
+              const yVal = context.parsed.y;
+              if (datasetLabel === 'Punto de Quiebre') {
+                return `Cruce estimado al: ${context.parsed.x.toFixed(3)}% (Ambos: 50.00%)`;
               }
+              return `${datasetLabel}: ${yVal.toFixed(3)}%`;
             }
           }
         }
       },
       scales: {
         x: {
+          type: 'linear',
+          min: xMin,
+          max: 100,
           grid: {
             color: 'rgba(255, 255, 255, 0.05)',
             borderColor: 'rgba(255, 255, 255, 0.1)'
           },
           ticks: {
             color: '#8b949e',
-            font: { family: 'Poppins', size: 10 }
+            font: { family: 'Poppins', size: 10 },
+            callback: function(value) {
+              return `${value}%`;
+            }
+          },
+          title: {
+            display: true,
+            text: '% de Actas Contabilizadas',
+            color: '#8b949e',
+            font: { family: 'Poppins', size: 11 }
           }
         },
         y: {
@@ -613,10 +723,14 @@ function renderProjectionChart(history, m, c, currentPct) {
             color: '#8b949e',
             font: { family: 'Poppins', size: 10 },
             callback: function(value) {
-              if (value > 0) return `+${formatNumber(value)} (K)`;
-              if (value < 0) return `+${formatNumber(Math.abs(value))} (R)`;
-              return '0';
+              return `${value}%`;
             }
+          },
+          title: {
+            display: true,
+            text: '% de Votos Válidos',
+            color: '#8b949e',
+            font: { family: 'Poppins', size: 11 }
           }
         }
       }
