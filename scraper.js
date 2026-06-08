@@ -104,6 +104,12 @@ async function scrapeONPE() {
     });
 
     console.log('Datos en bruto obtenidos.');
+    console.log('--- DEBUG SCRAPER ---');
+    console.log('Page Title:', await page.title());
+    const bodySnippet = rawData.bodyText ? rawData.bodyText.substring(0, 1000) : 'EMPTY BODY';
+    console.log('Body Text Snippet:', bodySnippet);
+    console.log('Candidates count extracted:', rawData.candidates ? rawData.candidates.length : 0);
+    console.log('---------------------');
     
     // Formatear los datos extraídos
     const parsedData = {
