@@ -14,14 +14,22 @@ async function scrapeONPE() {
     // Configurar un User-Agent realista
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     
-    // 1. Obtener datos de la API de Totales
-    console.log('Cargando API de Totales de la ONPE...');
-    await page.goto('https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general/totales?idEleccion=10&tipoFiltro=eleccion', {
+    console.log('Cargando la página principal de la ONPE para iniciar sesión...');
+    await page.goto('https://resultadosegundavuelta.onpe.gob.pe/main/resumen', {
       waitUntil: 'networkidle2',
-      timeout: 45000
+      timeout: 60000
     });
     
-    const totalesText = await page.evaluate(() => document.body.innerText);
+    console.log('Esperando inicialización de sesión...');
+    await new Promise(r => setTimeout(r, 4000));
+    
+    // 1. Obtener datos de la API de Totales mediante fetch en el contexto de la página
+    console.log('Consultando API de Totales desde el contexto de la página...');
+    const totalesText = await page.evaluate(async () => {
+      const res = await fetch('https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general/totales?idEleccion=10&tipoFiltro=eleccion');
+      return res.text();
+    });
+    
     let totalesJson;
     try {
       totalesJson = JSON.parse(totalesText);
@@ -30,14 +38,13 @@ async function scrapeONPE() {
       throw new Error('No se pudo parsear el JSON de la API de Totales.');
     }
     
-    // 2. Obtener datos de la API de Participantes (candidatos)
-    console.log('Cargando API de Participantes de la ONPE...');
-    await page.goto('https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general/participantes?idEleccion=10&tipoFiltro=eleccion', {
-      waitUntil: 'networkidle2',
-      timeout: 45000
+    // 2. Obtener datos de la API de Participantes (candidatos) mediante fetch en el contexto de la página
+    console.log('Consultando API de Participantes desde el contexto de la página...');
+    const participantesText = await page.evaluate(async () => {
+      const res = await fetch('https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general/participantes?idEleccion=10&tipoFiltro=eleccion');
+      return res.text();
     });
     
-    const participantesText = await page.evaluate(() => document.body.innerText);
     let participantesJson;
     try {
       participantesJson = JSON.parse(participantesText);
@@ -53,7 +60,7 @@ async function scrapeONPE() {
     const totales = totalesJson.data;
     const participantes = participantesJson.data;
     
-    // Formatear fechaActualizacion (milisegundos) a string legible para conservar la consistencia de "fecha ONPE"
+    // Formatear fechaActualizacion (milisegundos) a string legible
     const date = new Date(totales.fechaActualizacion);
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -67,11 +74,11 @@ async function scrapeONPE() {
     const formattedHours = String(hours).padStart(2, '0');
     const timestamp_onpe = `${day}/${month}/${year} ${formattedHours}:${minutes}:${seconds} ${ampm}`;
     
-    // Identificar candidatos basándonos en Fuerza Popular (código 8 o Keiko) y Juntos por el Perú (código 10 o Roberto)
+    // Identificar candidatos
     const cand1 = participantes.find(p => p.codigoAgrupacionPolitica === 8) || participantes[1];
     const cand2 = participantes.find(p => p.codigoAgrupacionPolitica === 10) || participantes[0];
     
-    // Calcular votos nulos (Emitidos - Validos)
+    // Calcular nulos
     const nulos = totales.totalVotosEmitidos - totales.totalVotosValidos;
     const nulosPct = totales.totalVotosEmitidos > 0 ? parseFloat(((nulos / totales.totalVotosEmitidos) * 100).toFixed(3)) : 0;
     
@@ -91,7 +98,7 @@ async function scrapeONPE() {
       candidato2_pct: cand2.porcentajeVotosValidos,
       votos_nulos: nulos,
       votos_nulos_pct: nulosPct,
-      votos_blancos: 0, // No segregados en los totales generales de resumen-general
+      votos_blancos: 0,
       votos_blancos_pct: 0
     };
     
