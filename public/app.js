@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadLatest();
   loadHistory();
   setupSyncButton();
+  setupBookmarklet();
   
   // Actualizar estado de sincronización cada 10 segundos
   setInterval(checkSyncStatus, 10000);
@@ -1591,3 +1592,115 @@ window.addEventListener('resize', () => {
     projectionChartInstance.resize();
   }
 });
+
+function setupBookmarklet() {
+  const bookmarkletLink = document.getElementById('bookmarklet-link');
+  if (!bookmarkletLink) return;
+  
+  const serverUrl = window.location.origin;
+  const apiToken = 'onpe_secret_token_123';
+  
+  const code = `javascript:(async function(){
+    try {
+      const updatedText = document.querySelector('.actualizado b')?.innerText || '';
+      const legendItems = Array.from(document.querySelectorAll('ul.leyenda li'));
+      const contabilizadasLi = legendItems.find(el => el.innerText.includes('Contabilizadas'));
+      const contabilizadasVal = contabilizadasLi?.querySelector('b')?.innerText || '';
+      const paraJeeLi = legendItems.find(el => el.innerText.includes('Para envío al JEE'));
+      const paraJeeVal = paraJeeLi?.querySelector('b')?.innerText || '';
+      const pendientesLi = legendItems.find(el => el.innerText.includes('Pendientes'));
+      const pendientesVal = pendientesLi?.querySelector('b')?.innerText || '';
+      const pctContabilizadas = document.querySelector('.datos_resumen')?.innerText || '';
+      
+      const percentDivs = Array.from(document.querySelectorAll('.datos_resumen, .tarjeta-candidato__porcentaje'));
+      const pctParaJee = percentDivs.find(el => el.innerText.includes('%') && el.parentElement?.innerText?.includes('Para envío'))?.innerText || '';
+      const pctPendientes = percentDivs.find(el => el.innerText.includes('%') && el.parentElement?.innerText?.includes('Pendientes'))?.innerText || '';
+      
+      const candidateCards = Array.from(document.querySelectorAll('article.tarjeta-candidato'));
+      const candidates = candidateCards.map(card => {
+        const pct = card.querySelector('.tarjeta-candidato__porcentaje')?.innerText || '';
+        const name = card.querySelector('.tarjeta-candidato__nombre')?.innerText || '';
+        const party = card.querySelector('.tarjeta-candidato__organizacion')?.innerText || '';
+        const votesEl = card.querySelectorAll('.tarjeta-candidato__votos');
+        let votesText = '';
+        for (const el of votesEl) {
+          if (el.innerText && el.innerText.includes('votos')) {
+            votesText = el.innerText;
+            break;
+          }
+        }
+        return { pct, name, party, votes: votesText };
+      });
+
+      let totalActasText = '';
+      const totalActasSearch = Array.from(document.querySelectorAll('*'))
+        .find(el => el.innerText && el.innerText.includes('Total de actas:') && el.children.length === 0);
+      if (totalActasSearch) {
+        totalActasText = totalActasSearch.parentElement?.innerText || '';
+      }
+
+      const cleanInt = (str) => parseInt((str || '').replace(/['\\\\s,votos()]/g, '')) || 0;
+      const cleanFloat = (str) => parseFloat((str || '').replace(/[%'\\\\s,]/g, '')) || 0;
+
+      const data = {
+        timestamp_onpe: updatedText.replace(/ACTUALIZADO AL\\\\s+/i, '').trim(),
+        actas_contabilizadas: cleanInt(contabilizadasVal),
+        actas_contabilizadas_pct: cleanFloat(pctContabilizadas),
+        actas_procesadas: cleanInt(contabilizadasVal) + cleanInt(paraJeeVal),
+        actas_procesadas_pct: 0,
+        candidato1_nombre: '', candidato1_partido: '', candidato1_votos: 0, candidato1_pct: 0,
+        candidato2_nombre: '', candidato2_partido: '', candidato2_votos: 0, candidato2_pct: 0,
+        votos_nulos: 0, votos_nulos_pct: 0, votos_blancos: 0, votos_blancos_pct: 0
+      };
+
+      if (candidates.length >= 2) {
+        const isAKeiko = candidates[0].name.toUpperCase().includes('FUJIMORI') || candidates[0].party.toUpperCase().includes('FUERZA');
+        const keiko = isAKeiko ? candidates[0] : candidates[1];
+        const roberto = isAKeiko ? candidates[1] : candidates[0];
+        data.candidato1_nombre = keiko.name.trim();
+        data.candidato1_partido = keiko.party.trim();
+        data.candidato1_votos = cleanInt(keiko.votes);
+        data.candidato1_pct = cleanFloat(keiko.pct);
+        data.candidato2_nombre = roberto.name.trim();
+        data.candidato2_partido = roberto.party.trim();
+        data.candidato2_votos = cleanInt(roberto.votes);
+        data.candidato2_pct = cleanFloat(roberto.pct);
+      }
+
+      const totalActasMatch = totalActasText.match(/Total de actas:\\\\s*([\\\\d,']+)/i);
+      if (totalActasMatch) {
+        const total = cleanInt(totalActasMatch[1]);
+        if (total > 0) {
+          data.actas_procesadas_pct = parseFloat(((data.actas_procesadas / total) * 100).toFixed(3));
+        }
+      } else {
+        data.actas_procesadas_pct = data.actas_contabilizadas_pct;
+      }
+
+      const serverUrl = '${serverUrl}';
+      const token = '${apiToken}';
+      
+      const res = await fetch(serverUrl + '/api/push', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+      });
+      
+      const result = await res.json();
+      if (result.success) {
+        alert(result.saved ? 'Sincronizado con exito' : 'Sincronizado sin cambios');
+      } else {
+        alert('Error: ' + (result.error || result.reason));
+      }
+    } catch(e) {
+      alert('Error: ' + e.message);
+    }
+  })();`;
+  
+  const cleanCode = code.replace(/\\n\\s*/g, ' ');
+  bookmarkletLink.setAttribute('href', cleanCode);
+}
+

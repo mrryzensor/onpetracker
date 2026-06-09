@@ -110,6 +110,26 @@ body {
   gap: 1.5rem;
 }
 
+.sync-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bookmarklet-btn {
+  text-decoration: none;
+  background-color: rgba(168, 85, 247, 0.1) !important;
+  border: 1px dashed rgba(168, 85, 247, 0.3) !important;
+  color: #c084fc !important;
+  transition: all 0.2s ease;
+}
+
+.bookmarklet-btn:hover {
+  background-color: rgba(168, 85, 247, 0.2) !important;
+  border-color: rgba(168, 85, 247, 0.5) !important;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+}
+
 .sync-info {
   display: flex;
   align-items: center;
