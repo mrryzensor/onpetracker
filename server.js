@@ -79,17 +79,23 @@ async function processAndSaveData(scrapedData) {
   return { saved: hasChanged, id };
 }
 
-// Programar sincronización automática cada 5 minutos
-// (Habilitado por defecto para funcionamiento local)
-console.log('Ejecutando cron local de verificación automática (cada 5 minutos)...');
-cron.schedule('*/5 * * * *', async () => {
-  console.log('Cron triggered: Ejecutando verificación periódica...');
-  try {
-    await performSync();
-  } catch (err) {
-    console.error('Error en cron sync:', err);
-  }
-});
+const DISABLE_LOCAL_SCRAPER = process.env.DISABLE_LOCAL_SCRAPER === 'true';
+
+if (!DISABLE_LOCAL_SCRAPER) {
+  // Programar sincronización automática cada 5 minutos
+  // (Habilitado por defecto para funcionamiento local)
+  console.log('Ejecutando cron local de verificación automática (cada 5 minutos)...');
+  cron.schedule('*/5 * * * *', async () => {
+    console.log('Cron triggered: Ejecutando verificación periódica...');
+    try {
+      await performSync();
+    } catch (err) {
+      console.error('Error en cron sync:', err);
+    }
+  });
+} else {
+  console.log('Scraper local de Puppeteer desactivado en el servidor para optimizar recursos y evitar bloqueos en la nube.');
+}
 
 // --- RUTA API ---
 
@@ -104,6 +110,12 @@ app.get('/api/sync-status', (req, res) => {
 
 // 2. Forzar sincronización manual (Sincroniza directamente usando el scraper en local)
 app.post('/api/sync', async (req, res) => {
+  if (DISABLE_LOCAL_SCRAPER) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'El scraping desde el servidor está desactivado para evitar inestabilidad en la nube. Por favor usa el Marcador ONPE para sincronizar desde tu conexión local.' 
+    });
+  }
   try {
     const result = await performSync();
     res.json(result);
@@ -173,10 +185,12 @@ db.initDatabase()
       console.log(`Servidor ONPE Tracker ejecutándose en http://localhost:${PORT}`);
       console.log(`=======================================================`);
       
-      // Realizar sincronización inicial al levantar el servidor
-      performSync()
-        .then(res => console.log('Sincronización inicial completada:', res))
-        .catch(err => console.error('Error en sincronización inicial:', err));
+      // Realizar sincronización inicial al levantar el servidor (si está activado)
+      if (!DISABLE_LOCAL_SCRAPER) {
+        performSync()
+          .then(res => console.log('Sincronización inicial completada:', res))
+          .catch(err => console.error('Error en sincronización inicial:', err));
+      }
     });
   })
   .catch((err) => {

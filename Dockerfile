@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install -y \
 # Esto le dice a Puppeteer que use el Chromium del sistema y que no intente descargar su propio Chrome
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV DISABLE_LOCAL_SCRAPER=true
+
 
 WORKDIR /app
 
