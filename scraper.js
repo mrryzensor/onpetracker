@@ -43,8 +43,8 @@ async function scrapeONPE() {
       'Cache-Control': 'no-cache'
     });
     
-    console.log('Cargando la página de la ONPE con cache-busting...');
-    await page.goto('https://resultadosegundavuelta.onpe.gob.pe/main/resumen?t=' + Date.now(), {
+    console.log('Cargando la página de la ONPE...');
+    await page.goto('https://resultadosegundavuelta.onpe.gob.pe/main/resumen', {
       waitUntil: 'networkidle2',
       timeout: 60000
     });
