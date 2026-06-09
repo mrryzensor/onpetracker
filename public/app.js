@@ -28,6 +28,25 @@ document.addEventListener('DOMContentLoaded', () => {
     loadLatest();
     loadHistory();
   }, 30000);
+
+  // Manejador del panel colapsable del desglose de Lima (JEE)
+  const btnToggle = document.getElementById('btn-toggle-lima-breakdown');
+  const btnClose = document.getElementById('btn-close-lima-breakdown');
+  const panel = document.getElementById('lima-breakdown-panel');
+  
+  if (btnToggle && btnClose && panel) {
+    btnToggle.addEventListener('click', () => {
+      panel.classList.toggle('collapsed');
+      if (!panel.classList.contains('collapsed')) {
+        setTimeout(() => {
+          panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 150);
+      }
+    });
+    btnClose.addEventListener('click', () => {
+      panel.classList.add('collapsed');
+    });
+  }
 });
 
 // Obtener estado de sincronización en curso
@@ -128,19 +147,71 @@ async function loadLatest() {
     document.getElementById('actas-jee-val').innerText = formatNumber(Math.round(data.actas_contabilizadas * 0.017)); // estimación si no está directo
     document.getElementById('actas-jee-pct-val').innerText = `${(100 - data.actas_contabilizadas_pct).toFixed(3)} %`;
     
-    // Candidato 1 (Keiko)
-    document.getElementById('c1-name').innerText = data.candidato1_nombre || 'KEIKO SOFIA FUJIMORI';
-    document.getElementById('c1-party').innerText = data.candidato1_partido || 'FUERZA POPULAR';
-    document.getElementById('c1-votes').innerText = `${formatNumber(data.candidato1_votos)} votos`;
-    document.getElementById('c1-pct').innerText = `${data.candidato1_pct.toFixed(3)} %`;
-    document.getElementById('th-c1').innerText = data.candidato1_nombre ? data.candidato1_nombre.split(' ')[0] : 'Candidato A';
+    const c1Name = data.candidato1_nombre || 'KEIKO SOFIA FUJIMORI';
+    const c1Party = data.candidato1_partido || 'FUERZA POPULAR';
+    const c1Votes = data.candidato1_votos;
+    const c1Pct = data.candidato1_pct;
+    const c1Photo = 'https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png';
 
-    // Candidato 2 (Roberto)
-    document.getElementById('c2-name').innerText = data.candidato2_nombre || 'ROBERTO HELBERT SANCHEZ';
-    document.getElementById('c2-party').innerText = data.candidato2_partido || 'JUNTOS POR EL PERÚ';
-    document.getElementById('c2-votes').innerText = `${formatNumber(data.candidato2_votos)} votos`;
-    document.getElementById('c2-pct').innerText = `${data.candidato2_pct.toFixed(3)} %`;
-    document.getElementById('th-c2').innerText = data.candidato2_nombre ? data.candidato2_nombre.split(' ')[0] : 'Candidato B';
+    const c2Name = data.candidato2_nombre || 'ROBERTO HELBERT SANCHEZ';
+    const c2Party = data.candidato2_partido || 'JUNTOS POR EL PERÚ';
+    const c2Votes = data.candidato2_votos;
+    const c2Pct = data.candidato2_pct;
+    const c2Photo = 'https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png';
+
+    // Mantener cabeceras de tabla fijas por candidato (Columna 1: Keiko, Columna 2: Roberto)
+    document.getElementById('th-c1').innerText = c1Name ? c1Name.split(' ')[0] : 'Keiko';
+    document.getElementById('th-c2').innerText = c2Name ? c2Name.split(' ')[0] : 'Roberto';
+
+    // Asignar el líder a la izquierda (Card 1) y el segundo a la derecha (Card 2)
+    const isC1Leading = c1Votes >= c2Votes;
+
+    const leftName = isC1Leading ? c1Name : c2Name;
+    const leftParty = isC1Leading ? c1Party : c2Party;
+    const leftVotes = isC1Leading ? c1Votes : c2Votes;
+    const leftPct = isC1Leading ? c1Pct : c2Pct;
+    const leftPhoto = isC1Leading ? c1Photo : c2Photo;
+    const leftClass = isC1Leading ? 'candidate-pct-badge pct-c1' : 'candidate-pct-badge pct-c2';
+
+    const rightName = isC1Leading ? c2Name : c1Name;
+    const rightParty = isC1Leading ? c2Party : c1Party;
+    const rightVotes = isC1Leading ? c2Votes : c1Votes;
+    const rightPct = isC1Leading ? c2Pct : c1Pct;
+    const rightPhoto = isC1Leading ? c2Photo : c1Photo;
+    const rightClass = isC1Leading ? 'candidate-pct-badge pct-c2' : 'candidate-pct-badge pct-c1';
+
+    // Rellenar UI izquierda
+    document.getElementById('c1-photo').src = leftPhoto;
+    document.getElementById('c1-photo').alt = leftName;
+    document.getElementById('c1-name').innerText = leftName;
+    document.getElementById('c1-party').innerText = leftParty;
+    document.getElementById('c1-votes').innerText = `${formatNumber(leftVotes)} votos`;
+    
+    const c1PctBadge = document.getElementById('c1-pct');
+    c1PctBadge.className = leftClass;
+    c1PctBadge.innerText = `${leftPct.toFixed(3)} %`;
+
+    // Rellenar UI derecha
+    document.getElementById('c2-photo').src = rightPhoto;
+    document.getElementById('c2-photo').alt = rightName;
+    document.getElementById('c2-name').innerText = rightName;
+    document.getElementById('c2-party').innerText = rightParty;
+    document.getElementById('c2-votes').innerText = `${formatNumber(rightVotes)} votos`;
+    
+    const c2PctBadge = document.getElementById('c2-pct');
+    c2PctBadge.className = rightClass;
+    c2PctBadge.innerText = `${rightPct.toFixed(3)} %`;
+
+    // Cambiar dinámicamente los bordes de las tarjetas de los candidatos
+    const c1Row = document.getElementById('c1-row');
+    const c2Row = document.getElementById('c2-row');
+    if (isC1Leading) {
+      c1Row.style.borderLeftColor = 'var(--color-c1)';
+      c2Row.style.borderRightColor = 'var(--color-c2)';
+    } else {
+      c1Row.style.borderLeftColor = 'var(--color-c2)';
+      c2Row.style.borderRightColor = 'var(--color-c1)';
+    }
 
     // Calcular la diferencia / Brecha
     const diff = data.candidato1_votos - data.candidato2_votos;
@@ -148,6 +219,16 @@ async function loadLatest() {
     
     let leadName = '';
     let leadParty = '';
+    const gapBar = document.querySelector('.gap-visual-bar');
+    
+    if (isC1Leading) {
+      // Keiko (C1) lidera -> Color C1 (Naranja) a la izquierda en la barra
+      gapBar.style.background = 'linear-gradient(90deg, var(--color-c1) 0%, var(--color-c1) 45%, #2a2d3d 45%, #2a2d3d 55%, var(--color-c2) 55%, var(--color-c2) 100%)';
+    } else {
+      // Roberto (C2) lidera -> Color C2 (Teal) a la izquierda en la barra
+      gapBar.style.background = 'linear-gradient(90deg, var(--color-c2) 0%, var(--color-c2) 45%, #2a2d3d 45%, #2a2d3d 55%, var(--color-c1) 55%, var(--color-c1) 100%)';
+    }
+
     if (diff > 0) {
       leadName = data.candidato1_nombre ? data.candidato1_nombre.split(' ')[0] : 'Keiko';
       leadParty = data.candidato1_partido;
@@ -160,8 +241,8 @@ async function loadLatest() {
       leadParty = data.candidato2_partido;
       document.getElementById('gap-difference-val').innerText = `+${formatNumber(diffAbs)} votos (Roberto)`;
       
-      document.getElementById('gap-leader-left').innerText = '';
-      document.getElementById('gap-leader-right').innerText = `Roberto lidera por ${formatNumber(diffAbs)} votos`;
+      document.getElementById('gap-leader-left').innerText = `Roberto lidera por ${formatNumber(diffAbs)} votos`;
+      document.getElementById('gap-leader-right').innerText = '';
     } else {
       document.getElementById('gap-difference-val').innerText = `Empate absoluto (0 votos)`;
       document.getElementById('gap-leader-left').innerText = '';
@@ -169,16 +250,495 @@ async function loadLatest() {
     }
 
     // Mover el indicador de brecha visualmente
-    // Mapeamos el porcentaje (de 48.5% a 51.5%) a la escala de la barra (de 5% a 95%) para hacerlo visible
+    // El líder siempre está a la izquierda (0% a 50%)
     const indicator = document.getElementById('gap-indicator');
-    const c1Pct = data.candidato1_pct;
+    const leadPct = Math.max(c1Pct, c2Pct);
     
-    // Zoom visual: restamos 50, escalamos y centramos
-    // Ej: 50.036% -> diff de +0.036. Con factor de escala 300, 0.036 * 300 = +10.8%. Posición = 50 + 10.8 = 60.8%
-    let visualPercent = 50 + (c1Pct - 50) * 150;
-    // Acotar
+    // Si están empatados (50%), el indicador se sitúa al medio (50%).
+    // Conforme suba el porcentaje del líder, se desplaza hacia la izquierda (hacia el 5%)
+    let visualPercent = 50 - (leadPct - 50) * 150;
     visualPercent = Math.max(5, Math.min(95, visualPercent));
     indicator.style.left = `${visualPercent}%`;
+
+    // --- Cálculo del Umbral de Irreversibilidad Matemática ---
+    const totalValidVotes = c1Votes + c2Votes;
+    const pctContabilizadas = data.actas_contabilizadas_pct;
+    let estTotalValidVotes = 0;
+    let remainingVotes = 0;
+
+    if (pctContabilizadas > 0) {
+      estTotalValidVotes = totalValidVotes / (pctContabilizadas / 100);
+      remainingVotes = Math.max(0, Math.round(estTotalValidVotes - totalValidVotes));
+    }
+
+    let progressPct = 0;
+    if (remainingVotes > 0) {
+      progressPct = Math.min(100, (diffAbs / remainingVotes) * 100);
+    } else {
+      progressPct = 100;
+    }
+
+    const isIrreversible = diffAbs > remainingVotes;
+    const is100Percent = pctContabilizadas >= 100;
+
+    // Determinar nombres
+    let leaderName = '';
+    let trailerName = '';
+    if (diff > 0) {
+      leaderName = c1Name ? c1Name.split(' ')[0] : 'Keiko';
+      trailerName = c2Name ? c2Name.split(' ')[0] : 'Roberto';
+    } else if (diff < 0) {
+      leaderName = c2Name ? c2Name.split(' ')[0] : 'Roberto';
+      trailerName = c1Name ? c1Name.split(' ')[0] : 'Keiko';
+    } else {
+      leaderName = 'Ninguno';
+      trailerName = 'Ninguno';
+    }
+
+    const victoryCard = document.getElementById('victory-status-card');
+    const badgeEl = document.getElementById('victory-status-badge');
+    const explanationEl = document.getElementById('victory-explanation-text');
+
+    document.getElementById('victory-current-gap').innerText = formatNumber(diffAbs);
+    document.getElementById('victory-remaining-votes').innerText = formatNumber(remainingVotes);
+    document.getElementById('victory-progress-pct-text').innerText = `${progressPct.toFixed(1)}%`;
+    document.getElementById('victory-progress-bar').style.width = `${progressPct}%`;
+
+    if (isIrreversible || is100Percent) {
+      if (diffAbs > 0) {
+        badgeEl.innerText = 'Victoria Confirmada';
+        badgeEl.className = 'status-badge confirmed';
+        explanationEl.innerHTML = `La diferencia de <strong>${formatNumber(diffAbs)}</strong> votos supera los <strong>${formatNumber(remainingVotes)}</strong> votos estimados por escrutar. ¡Es matemáticamente imposible que ${trailerName} supere a ${leaderName}!`;
+        victoryCard.classList.add('victory-confirmed-glow');
+      } else {
+        badgeEl.innerText = 'Empate Confirmado';
+        badgeEl.className = 'status-badge confirmed';
+        explanationEl.innerHTML = `El escrutinio ha concluido y ambos candidatos tienen exactamente la misma cantidad de votos.`;
+        victoryCard.classList.add('victory-confirmed-glow');
+      }
+    } else {
+      badgeEl.innerText = 'Matemáticamente Abierto';
+      badgeEl.className = 'status-badge open';
+      victoryCard.classList.remove('victory-confirmed-glow');
+      
+      if (diffAbs > 0) {
+        const votesToVictory = Math.max(0, Math.ceil((remainingVotes - diffAbs) / 2));
+        const pctOfRemaining = remainingVotes > 0 ? (votesToVictory / remainingVotes) * 100 : 0;
+        
+        // Calcular a qué porcentaje de actas contabilizadas se lograría
+        const leadPctVal = Math.max(c1Pct, c2Pct);
+        const pctVictoryActas = leadPctVal > 50 ? (50 / leadPctVal * 100) : 100;
+        
+        let actasText = '';
+        if (pctVictoryActas < 100) {
+          actasText = ` Se estima que alcanzará la victoria matemática al <strong>${pctVictoryActas.toFixed(3)}%</strong> de actas contabilizadas (al ritmo actual de votación).`;
+        } else {
+          actasText = ` Al ritmo actual, la victoria se definirá en el tramo final del escrutinio (100% de actas).`;
+        }
+
+        explanationEl.innerHTML = `La diferencia actual es de <strong>${formatNumber(diffAbs)}</strong> votos. Quedan aproximadamente <strong>${formatNumber(remainingVotes)}</strong> votos por escrutar. A ${leaderName} le bastan <strong>${formatNumber(votesToVictory)}</strong> votos más (<strong>${pctOfRemaining.toFixed(2)}%</strong> de los votos restantes) para asegurar la victoria.${actasText}`;
+      } else {
+        explanationEl.innerHTML = `Ambos candidatos se encuentran empatados. Quedan aproximadamente <strong>${formatNumber(remainingVotes)}</strong> votos por escrutar.`;
+      }
+    }
+
+    // --- Render/update Victory Horizontal Stacked Bar Chart ---
+    const victoryChartCtx = document.getElementById('victoryChart').getContext('2d');
+    
+    const pctC1_total = estTotalValidVotes > 0 ? (c1Votes / estTotalValidVotes * 100) : 0;
+    const pctC2_total = estTotalValidVotes > 0 ? (c2Votes / estTotalValidVotes * 100) : 0;
+    const pctRemaining = estTotalValidVotes > 0 ? (remainingVotes / estTotalValidVotes * 100) : 0;
+    
+    const labelC1 = c1Name ? c1Name.split(' ')[0] : 'Keiko';
+    const labelC2 = c2Name ? c2Name.split(' ')[0] : 'Roberto';
+    
+    if (window.victoryChartInstance) {
+      window.victoryChartInstance.destroy();
+    }
+    
+    // Custom plugin to draw vertical line at 50% majority threshold
+    const majorityLinePlugin = {
+      id: 'majorityLine',
+      afterDatasetsDraw(chart) {
+        const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
+        ctx.save();
+        const xPixel = x.getPixelForValue(50);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([4, 4]);
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+        ctx.shadowBlur = 4;
+        ctx.beginPath();
+        ctx.moveTo(xPixel, top);
+        ctx.lineTo(xPixel, bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px Poppins';
+        ctx.textAlign = 'center';
+        ctx.shadowBlur = 2;
+        ctx.fillText('50% (Meta)', xPixel, top - 4);
+        ctx.restore();
+      }
+    };
+
+    window.victoryChartInstance = new Chart(victoryChartCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Votos Válidos Totales'],
+        datasets: [
+          {
+            label: labelC1,
+            data: [pctC1_total],
+            backgroundColor: '#ff6c00', // Keiko (Fuerza Popular) - Naranja
+            barPercentage: 0.5
+          },
+          {
+            label: 'Por Escrutar',
+            data: [pctRemaining],
+            backgroundColor: '#eab308', // Amarillo brillante
+            barPercentage: 0.5
+          },
+          {
+            label: labelC2,
+            data: [pctC2_total],
+            backgroundColor: '#00c2a0', // Roberto (Juntos por el Perú) - Teal
+            barPercentage: 0.5
+          }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            stacked: true,
+            min: 0,
+            max: 100,
+            grid: {
+              color: 'rgba(255, 255, 255, 0.05)',
+              borderColor: 'rgba(255, 255, 255, 0.1)'
+            },
+            ticks: {
+              color: '#8b949e',
+              font: {
+                family: 'Poppins',
+                size: 10
+              },
+              callback: function(value) {
+                return value + '%';
+              }
+            }
+          },
+          y: {
+            stacked: true,
+            display: false
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: {
+              color: '#fff',
+              boxWidth: 10,
+              padding: 10,
+              font: {
+                family: 'Poppins',
+                size: 9
+              }
+            }
+          },
+          tooltip: {
+            backgroundColor: '#151824',
+            titleColor: '#8b949e',
+            bodyColor: '#fff',
+            borderColor: '#252a3d',
+            borderWidth: 1,
+            padding: 8,
+            callbacks: {
+              label: function(context) {
+                const label = context.dataset.label;
+                const pct = context.raw;
+                const votes = Math.round(pct / 100 * estTotalValidVotes);
+                return `${label}: ${pct.toFixed(3)}% (${formatNumber(votes)} votos)`;
+              }
+            }
+          }
+        }
+      },
+      plugins: [majorityLinePlugin]
+    });
+
+    // --- Cálculo y Proyección del Impacto Regional de Actas Pendientes ---
+    // 1. Pesos Electorales Estimados (Total de votos válidos estimados por región en base a padrón real)
+    const weightExt = 0.021; // El voto extranjero representa ~2.1% de los votos válidos
+    const weightLim = 0.320; // Lima representa ~32.0%
+    const weightLor = 0.025; // Loreto ~2.5%
+    const weightCus = 0.038; // Cusco ~3.8%
+    const weightAya = 0.018; // Ayacucho ~1.8%
+    const weightAma = 0.011; // Amazonas ~1.1%
+    const weightOtr = 1.0 - (weightExt + weightLim + weightLor + weightCus + weightAya + weightAma);
+
+    // 2. Porcentaje de avance de actas por región (Estimación de rezago del voto extranjero)
+    const pctNat = data.actas_contabilizadas_pct;
+    let pctProgressExt = 0;
+    if (pctNat > 50) {
+      pctProgressExt = Math.min(100, (pctNat - 50) * 2);
+    }
+    // Avance estimado para regiones nacionales
+    const pctProgressNat = Math.min(100, pctNat + (weightExt * (pctNat - pctProgressExt) / (1 - weightExt)));
+
+    // 3. Votos restantes estimados por región
+    const remExt = Math.max(0, Math.round(estTotalValidVotes * weightExt * (1 - pctProgressExt / 100)));
+    const remLim = Math.max(0, Math.round(estTotalValidVotes * weightLim * (1 - pctProgressNat / 100)));
+    const remLor = Math.max(0, Math.round(estTotalValidVotes * weightLor * (1 - pctProgressNat / 100)));
+    const remCus = Math.max(0, Math.round(estTotalValidVotes * weightCus * (1 - pctProgressNat / 100)));
+    const remAya = Math.max(0, Math.round(estTotalValidVotes * weightAya * (1 - pctProgressNat / 100)));
+    const remAma = Math.max(0, Math.round(estTotalValidVotes * weightAma * (1 - pctProgressNat / 100)));
+    
+    const sumKeyRegions = remExt + remLim + remLor + remCus + remAya + remAma;
+    const remOtr = Math.max(0, remainingVotes - sumKeyRegions);
+
+    // 4. Márgenes históricos base de diferencia de votos
+    const baseMarginExt = 0.2556; // Keiko +25.56%
+    const baseMarginLim = 0.2700; // Keiko +27.00%
+    const baseMarginLor = 0.0982; // Keiko +9.82%
+    const baseMarginCus = -0.6140; // Roberto +61.40%
+    const baseMarginAya = -0.4264; // Roberto +42.64%
+    const baseMarginAma = -0.3046; // Roberto +30.46%
+    
+    // 5. Ajuste en tiempo real basado en la diferencia nacional
+    // Desviación del promedio nacional (Margen actual de Keiko, positivo si Keiko lidera)
+    const nationalDiffPct = (c1Pct - c2Pct) / 100;
+    
+    // Ajustar márgenes agregando la desviación nacional observada
+    const adjMarginExt = baseMarginExt + nationalDiffPct;
+    const adjMarginLim = baseMarginLim + nationalDiffPct;
+    const adjMarginLor = baseMarginLor + nationalDiffPct;
+    const adjMarginCus = baseMarginCus + nationalDiffPct;
+    const adjMarginAya = baseMarginAya + nationalDiffPct;
+    const adjMarginAma = baseMarginAma + nationalDiffPct;
+
+    // Convertir márgenes ajustados a porcentajes de votación por candidato
+    const getPcts = (margin) => {
+      const pK = Math.max(0, Math.min(1, (1 + margin) / 2));
+      const pR = 1 - pK;
+      return { pK, pR };
+    };
+
+    const extPcts = getPcts(adjMarginExt);
+    const limPcts = getPcts(adjMarginLim);
+    const lorPcts = getPcts(adjMarginLor);
+    const cusPcts = getPcts(adjMarginCus);
+    const ayaPcts = getPcts(adjMarginAya);
+    const amaPcts = getPcts(adjMarginAma);
+    
+    // Otros: distribuido según el promedio nacional en tiempo real
+    const otrPcts = { pK: c1Pct / 100, pR: c2Pct / 100 };
+
+    // 6. Distribución de votos por región
+    const extK = Math.round(remExt * extPcts.pK);
+    const extR = remExt - extK;
+    const extNetK = Math.max(0, extK - extR);
+
+    // --- Desglose de Actas JEE de Lima por Provincia y Distrito ---
+    const totalActasJEE = Math.round(remLim / 235);
+    const locations = [
+      // Distritos de Lima Metropolitana (suman peso 0.90 de Lima departamento)
+      { name: 'Lima Met. - San Juan de Lurigancho', weight: 0.90 * 0.12, baseMargin: 0.0800, isDistrict: true },
+      { name: 'Lima Met. - San Martín de Porres', weight: 0.90 * 0.08, baseMargin: 0.1200, isDistrict: true },
+      { name: 'Lima Met. - Ate', weight: 0.90 * 0.07, baseMargin: 0.1000, isDistrict: true },
+      { name: 'Lima Met. - Comas', weight: 0.90 * 0.06, baseMargin: 0.0800, isDistrict: true },
+      { name: 'Lima Met. - Villa María del Triunfo', weight: 0.90 * 0.05, baseMargin: 0.0500, isDistrict: true },
+      { name: 'Lima Met. - Villa El Salvador', weight: 0.90 * 0.05, baseMargin: -0.0600, isDistrict: true },
+      { name: 'Lima Met. - Santiago de Surco', weight: 0.90 * 0.05, baseMargin: 0.4500, isDistrict: true },
+      { name: 'Lima Met. - Residenciales (Surco/Miraflores/Molina/Borja)*', weight: 0.90 * 0.12, baseMargin: 0.6000, isDistrict: true },
+      { name: 'Lima Met. - Chorrillos', weight: 0.90 * 0.04, baseMargin: 0.1500, isDistrict: true },
+      { name: 'Lima Met. - Carabayllo', weight: 0.90 * 0.04, baseMargin: 0.0600, isDistrict: true },
+      { name: 'Lima Met. - Puente Piedra', weight: 0.90 * 0.04, baseMargin: 0.0800, isDistrict: true },
+      { name: 'Lima Met. - Cercado de Lima', weight: 0.90 * 0.04, baseMargin: 0.1500, isDistrict: true },
+      { name: 'Lima Met. - Otros Distritos', weight: 0.90 * 0.24, baseMargin: 0.2500, isDistrict: true },
+      
+      // Otras Provincias del Departamento de Lima (suman peso 0.10)
+      { name: 'Prov. Cañete', weight: 0.03, baseMargin: 0.0800, isDistrict: false },
+      { name: 'Prov. Huaura', weight: 0.03, baseMargin: 0.0200, isDistrict: false },
+      { name: 'Prov. Huaral', weight: 0.02, baseMargin: -0.0200, isDistrict: false },
+      { name: 'Prov. Huarochirí', weight: 0.02, baseMargin: -0.1600, isDistrict: false }
+    ];
+
+    let breakdownHTML = '';
+    let accumulatedLimK = 0;
+    let accumulatedLimR = 0;
+
+    locations.forEach(loc => {
+      const pActas = Math.round(totalActasJEE * loc.weight);
+      const pVotes = Math.round(remLim * loc.weight);
+      
+      const pAdjMargin = loc.baseMargin + nationalDiffPct;
+      const pK = Math.max(0, Math.min(1, (1 + pAdjMargin) / 2));
+      const pR = 1 - pK;
+      
+      const pK_votes = Math.round(pVotes * pK);
+      const pR_votes = pVotes - pK_votes;
+      const pDiff = pK_votes - pR_votes;
+
+      // Acumular los votos calculados provincia/distrito para consolidar el total de Lima
+      accumulatedLimK += pK_votes;
+      accumulatedLimR += pR_votes;
+      
+      let impactText = '';
+      if (pDiff > 0) {
+        impactText = `<span class="c1-text">+${formatNumber(pDiff)} (Keiko)</span>`;
+      } else if (pDiff < 0) {
+        impactText = `<span class="c2-text">+${formatNumber(Math.abs(pDiff))} (Roberto)</span>`;
+      } else {
+        impactText = '0';
+      }
+
+      breakdownHTML += `
+        <tr>
+          <td><strong>${loc.name}</strong></td>
+          <td>${formatNumber(pActas)}</td>
+          <td>${formatNumber(pVotes)}</td>
+          <td>
+            <span class="c1-text">${(pK*100).toFixed(1)}%</span> / 
+            <span class="c2-text">${(pR*100).toFixed(1)}%</span>
+          </td>
+          <td>${formatNumber(pK_votes)}</td>
+          <td>${formatNumber(pR_votes)}</td>
+          <td><strong>${impactText}</strong></td>
+        </tr>
+      `;
+    });
+    const tableBody = document.getElementById('lima-breakdown-body');
+    if (tableBody) {
+      tableBody.innerHTML = breakdownHTML;
+    }
+
+    // El impacto neto y votos proyectados para Lima se determinan sumando exactamente sus distritos y provincias
+    const limK = accumulatedLimK;
+    const limR = accumulatedLimR;
+    const limNetK = Math.max(0, limK - limR);
+
+    const lorK = Math.round(remLor * lorPcts.pK);
+    const lorR = remLor - lorK;
+    const lorNetK = Math.max(0, lorK - lorR);
+
+    const cusR = Math.round(remCus * cusPcts.pR);
+    const cusK = remCus - cusR;
+    const cusNetR = Math.max(0, cusR - cusK);
+
+    const ayaR = Math.round(remAya * ayaPcts.pR);
+    const ayaK = remAya - ayaR;
+    const ayaNetR = Math.max(0, ayaR - ayaK);
+
+    const amaR = Math.round(remAma * amaPcts.pR);
+    const amaK = remAma - amaR;
+    const amaNetR = Math.max(0, amaR - amaK);
+
+    const otrK = Math.round(remOtr * otrPcts.pK);
+    const otrR = remOtr - otrK;
+
+    // Totales estimados pendientes
+    const totPendingK = extK + limK + lorK + cusK + ayaK + amaK + otrK;
+    const totPendingR = extR + limR + lorR + cusR + ayaR + amaR + otrR;
+    const netPendingDiff = totPendingK - totPendingR;
+
+    // Proyección Final al 100% de actas
+    const finalVotesK = c1Votes + totPendingK;
+    const finalVotesR = c2Votes + totPendingR;
+    const finalTotal = finalVotesK + finalVotesR;
+    const finalPctK = finalTotal > 0 ? (finalVotesK / finalTotal * 100) : 0;
+    const finalPctR = finalTotal > 0 ? (finalVotesR / finalTotal * 100) : 0;
+
+    // Guardar proyección regional en objeto global para sincerar la tarjeta y gráfica de regresión
+    window.geographicalProjection = {
+      finalVotesK,
+      finalVotesR,
+      finalPctK,
+      finalPctR,
+      totPendingK,
+      totPendingR,
+      netPendingDiff
+    };
+
+    // Asignar al DOM - Bloque 1: ¿Qué falta contar?
+    document.getElementById('reg-pending-votes-val').innerText = formatNumber(remainingVotes);
+    const pctRemainingTotal = estTotalValidVotes > 0 ? (remainingVotes / estTotalValidVotes * 100) : 0;
+    document.getElementById('reg-pending-pct-val').innerText = `${pctRemainingTotal.toFixed(1)}%`;
+    document.getElementById('reg-pending-ext-val').innerText = `${formatNumber(remExt)} votos`;
+    document.getElementById('reg-pending-lim-val').innerText = `${formatNumber(remLim)} votos`;
+    document.getElementById('reg-pending-lor-val').innerText = `${formatNumber(remLor)} votos`;
+
+    // Bloque 2: Impacto neto por región (Barras)
+    document.getElementById('reg-impact-ext-k').innerText = `+${formatNumber(extNetK)}`;
+    document.getElementById('reg-impact-lim-k').innerText = `+${formatNumber(limNetK)}`;
+    document.getElementById('reg-impact-lor-k').innerText = `+${formatNumber(lorNetK)}`;
+    document.getElementById('reg-impact-cus-r').innerText = `+${formatNumber(cusNetR)}`;
+    document.getElementById('reg-impact-aya-r').innerText = `+${formatNumber(ayaNetR)}`;
+    document.getElementById('reg-impact-ama-r').innerText = `+${formatNumber(amaNetR)}`;
+
+    // Ancho proporcional de barras de impacto
+    const maxImpact = Math.max(1, extNetK, limNetK, lorNetK, cusNetR, ayaNetR, amaNetR);
+    document.getElementById('reg-bar-ext-k').style.width = `${(extNetK / maxImpact * 100).toFixed(1)}%`;
+    document.getElementById('reg-bar-lim-k').style.width = `${(limNetK / maxImpact * 100).toFixed(1)}%`;
+    document.getElementById('reg-bar-lor-k').style.width = `${(lorNetK / maxImpact * 100).toFixed(1)}%`;
+    document.getElementById('reg-bar-cus-r').style.width = `${(cusNetR / maxImpact * 100).toFixed(1)}%`;
+    document.getElementById('reg-bar-aya-r').style.width = `${(ayaNetR / maxImpact * 100).toFixed(1)}%`;
+    document.getElementById('reg-bar-ama-r').style.width = `${(amaNetR / maxImpact * 100).toFixed(1)}%`;
+
+    // Asignar los desgloses de porcentajes y votos por candidato (Sincerado para Lima)
+    const pctLimK_calc = limK / (limK + limR || 1) * 100;
+    const pctLimR_calc = 100 - pctLimK_calc;
+
+    document.getElementById('reg-details-ext-k').innerHTML = `<span>Keiko: <strong>${(extPcts.pK*100).toFixed(1)}%</strong> (${formatNumber(extK)})</span> <span>Roberto: <strong>${(extPcts.pR*100).toFixed(1)}%</strong> (${formatNumber(extR)})</span>`;
+    document.getElementById('reg-details-lim-k').innerHTML = `<span>Keiko: <strong>${pctLimK_calc.toFixed(1)}%</strong> (${formatNumber(limK)})</span> <span>Roberto: <strong>${pctLimR_calc.toFixed(1)}%</strong> (${formatNumber(limR)})</span>`;
+    document.getElementById('reg-details-lor-k').innerHTML = `<span>Keiko: <strong>${(lorPcts.pK*100).toFixed(1)}%</strong> (${formatNumber(lorK)})</span> <span>Roberto: <strong>${(lorPcts.pR*100).toFixed(1)}%</strong> (${formatNumber(lorR)})</span>`;
+    document.getElementById('reg-details-cus-r').innerHTML = `<span>Keiko: <strong>${(cusPcts.pK*100).toFixed(1)}%</strong> (${formatNumber(cusK)})</span> <span>Roberto: <strong>${(cusPcts.pR*100).toFixed(1)}%</strong> (${formatNumber(cusR)})</span>`;
+    document.getElementById('reg-details-aya-r').innerHTML = `<span>Keiko: <strong>${(ayaPcts.pK*100).toFixed(1)}%</strong> (${formatNumber(ayaK)})</span> <span>Roberto: <strong>${(ayaPcts.pR*100).toFixed(1)}%</strong> (${formatNumber(ayaR)})</span>`;
+    document.getElementById('reg-details-ama-r').innerHTML = `<span>Keiko: <strong>${(amaPcts.pK*100).toFixed(1)}%</strong> (${formatNumber(amaK)})</span> <span>Roberto: <strong>${(amaPcts.pR*100).toFixed(1)}%</strong> (${formatNumber(amaR)})</span>`;
+
+    // Bloque 3: Balance y Proyección Final
+    document.getElementById('reg-balance-k').innerText = `+${formatNumber(totPendingK)}`;
+    document.getElementById('reg-balance-r').innerText = `+${formatNumber(totPendingR)}`;
+    
+    const balanceNetValEl = document.getElementById('reg-balance-net');
+    const balanceWinnerBadge = document.getElementById('reg-balance-winner');
+    
+    if (netPendingDiff > 0) {
+      balanceNetValEl.innerText = `+${formatNumber(Math.abs(netPendingDiff))} (Keiko)`;
+      balanceWinnerBadge.innerText = 'Keiko lidera pendientes';
+      balanceWinnerBadge.className = 'balance-winner-badge k-win';
+    } else if (netPendingDiff < 0) {
+      balanceNetValEl.innerText = `+${formatNumber(Math.abs(netPendingDiff))} (Roberto)`;
+      balanceWinnerBadge.innerText = 'Roberto lidera pendientes';
+      balanceWinnerBadge.className = 'balance-winner-badge r-win';
+    } else {
+      balanceNetValEl.innerText = 'Empate neto';
+      balanceWinnerBadge.innerText = 'Empate en pendientes';
+      balanceWinnerBadge.className = 'balance-winner-badge';
+    }
+
+    document.getElementById('reg-final-votes-k').innerText = `${formatNumber(finalVotesK)} votos`;
+    document.getElementById('reg-final-pct-k').innerText = `${finalPctK.toFixed(2)}%`;
+    document.getElementById('reg-final-votes-r').innerText = `${formatNumber(finalVotesR)} votos`;
+    document.getElementById('reg-final-pct-r').innerText = `${finalPctR.toFixed(2)}%`;
+
+    const finalDiffVal = Math.abs(finalVotesK - finalVotesR);
+    const finalDiffWinner = finalVotesK > finalVotesR ? 'Keiko Fujimori' : 'Roberto Sánchez';
+    const finalDiffClass = finalVotesK > finalVotesR ? 'c1-text' : 'c2-text';
+    document.getElementById('reg-final-diff-val').innerHTML = `Diferencia Proyectada: <strong class="${finalDiffClass}">+${formatNumber(finalDiffVal)} votos</strong> a favor de ${finalDiffWinner}`;
+
+    // Resumen de texto en footer
+    const currentLeaderName = diff > 0 ? 'Keiko' : 'Roberto';
+    const pendingLeaderName = netPendingDiff > 0 ? 'Keiko Fujimori' : 'Roberto Sánchez';
+    const finalWinnerName = finalVotesK > finalVotesR ? 'Keiko Fujimori' : 'Roberto Sánchez';
+    const finalLeadMargin = Math.abs(finalVotesK - finalVotesR);
+
+    document.getElementById('reg-summary-text').innerHTML = `Aunque hoy <strong>${currentLeaderName}</strong> lidera por <strong>${formatNumber(diffAbs)}</strong> votos, las actas pendientes —especialmente del extranjero, Lima y Loreto— proyectan una ventaja neta de <strong>${formatNumber(Math.abs(netPendingDiff))}</strong> votos para <strong>${pendingLeaderName}</strong>. Esto resultaría en una ventaja final para <strong>${finalWinnerName}</strong> de aproximadamente <strong>${formatNumber(finalLeadMargin)}</strong> votos (<strong>${(finalLeadMargin / finalTotal * 100).toFixed(2)}%</strong> del total) al 100% de actas escrutadas.`;
 
   } catch (err) {
     console.error('Error al cargar datos del último registro:', err);
@@ -279,6 +839,10 @@ function renderChart(history) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
       plugins: {
         legend: {
           display: false // Ocultamos la leyenda para simplificar
@@ -289,8 +853,17 @@ function renderChart(history) {
           bodyColor: '#fff',
           borderColor: '#252a3d',
           borderWidth: 1,
-          padding: 12,
+          padding: 14,
           displayColors: false,
+          titleFont: {
+            family: 'Poppins',
+            size: 14,
+            weight: 'bold'
+          },
+          bodyFont: {
+            family: 'Poppins',
+            size: 14
+          },
           callbacks: {
             label: function(context) {
               const val = context.parsed.y;
@@ -315,7 +888,7 @@ function renderChart(history) {
             color: '#8b949e',
             font: {
               family: 'Poppins',
-              size: 10
+              size: 12
             }
           }
         },
@@ -328,7 +901,7 @@ function renderChart(history) {
             color: '#8b949e',
             font: {
               family: 'Poppins',
-              size: 10
+              size: 12
             },
             callback: function(value) {
               if (value > 0) return `+${formatNumber(value)} (K)`;
@@ -434,19 +1007,25 @@ function updateProjection(history) {
   const currentPct = history[history.length - 1].actas_contabilizadas_pct;
   
   // 2. Calcular diferencia final al 100% de actas
-  const finalDiff = m * 100 + c;
-  const finalDiffAbs = Math.abs(finalDiff);
-  
-  // Proyectar porcentajes individuales al 100% de actas
+  let finalDiff = m * 100 + c;
   let projC1Pct = m1 * 100 + c1_int;
   let projC2Pct = m2 * 100 + c2_int;
   
-  // Normalizar para que sumen 100% (evitando pequeñas desviaciones de la regresión)
-  const sumProj = projC1Pct + projC2Pct;
-  if (sumProj > 0) {
-    projC1Pct = (projC1Pct / sumProj) * 100;
-    projC2Pct = (projC2Pct / sumProj) * 100;
+  // Sincerar con la proyección geográfica (regional)
+  if (window.geographicalProjection) {
+    projC1Pct = window.geographicalProjection.finalPctK;
+    projC2Pct = window.geographicalProjection.finalPctR;
+    finalDiff = window.geographicalProjection.finalVotesK - window.geographicalProjection.finalVotesR;
+  } else {
+    // Normalizar para que sumen 100%
+    const sumProj = projC1Pct + projC2Pct;
+    if (sumProj > 0) {
+      projC1Pct = (projC1Pct / sumProj) * 100;
+      projC2Pct = (projC2Pct / sumProj) * 100;
+    }
   }
+  
+  const finalDiffAbs = Math.abs(finalDiff);
   
   // Rellenar diferencia final y ganador proyectado
   finalDiffEl.innerText = `${formatNumber(Math.round(finalDiffAbs))} votos`;
@@ -539,11 +1118,7 @@ function renderProjectionChart(history, m, c, currentPct) {
   const m2 = (n * sumXY2 - sumX * sumY2) / denominator;
   const c2 = (sumY2 - m2 * sumX) / n;
   
-  // Punto de quiebre (cruce)
-  let tiePct = null;
-  if (Math.abs(m1 - m2) > 0.00001) {
-    tiePct = (c2 - c1) / (m1 - m2);
-  }
+  
   
   // Generar datos reales para graficar (como objetos {x, y})
   const actualK = [];
@@ -552,22 +1127,56 @@ function renderProjectionChart(history, m, c, currentPct) {
     actualK.push({ x: row.actas_contabilizadas_pct, y: row.candidato1_pct });
     actualR.push({ x: row.actas_contabilizadas_pct, y: row.candidato2_pct });
   });
+
+  const startValK = actualK.length > 0 ? actualK[actualK.length - 1].y : currentPct;
+  const startValR = actualR.length > 0 ? actualR[actualR.length - 1].y : 100 - currentPct;
+  
+  let endValK = m1 * 100 + c1;
+  let endValR = m2 * 100 + c2;
+  
+  if (window.geographicalProjection) {
+    endValK = window.geographicalProjection.finalPctK;
+    endValR = window.geographicalProjection.finalPctR;
+  } else {
+    const totalEnd = endValK + endValR;
+    if (totalEnd > 0) {
+      endValK = (endValK / totalEnd) * 100;
+      endValR = (endValR / totalEnd) * 100;
+    }
+  }
+
+  // Si cruza por 50% entre el porcentaje actual y el 100%
+  let tiePct = null;
+  const diffStart = startValK - startValR;
+  const diffEnd = endValK - endValR;
+  if (diffStart * diffEnd < 0) {
+    if (Math.abs(endValK - startValK) > 0.00001) {
+      const factor = (50 - startValK) / (endValK - startValK);
+      tiePct = currentPct + factor * (100 - currentPct);
+    }
+  }
   
   // Generar datos proyectados (desde el actualPct hasta 100%)
   const projK = [];
   const projR = [];
   
   // Empezar en el último punto real para continuidad
-  if (actualK.length > 0) {
-    projK.push({ x: currentPct, y: actualK[actualK.length - 1].y });
-    projR.push({ x: currentPct, y: actualR[actualR.length - 1].y });
-  }
+  projK.push({ x: currentPct, y: startValK });
+  projR.push({ x: currentPct, y: startValR });
   
-  // Agregar puntos intermedios y el 100%
+  // Agregar puntos intermedios interpolando linealmente
   const startPct = Math.ceil(currentPct);
+  const pctRange = 100 - currentPct;
   for (let pct = startPct; pct <= 100; pct++) {
-    let y1 = m1 * pct + c1;
-    let y2 = m2 * pct + c2;
+    let y1, y2;
+    if (pctRange > 0) {
+      const factor = (pct - currentPct) / pctRange;
+      y1 = startValK + factor * (endValK - startValK);
+      y2 = startValR + factor * (endValR - startValR);
+    } else {
+      y1 = endValK;
+      y2 = endValR;
+    }
     // Normalizar
     const total = y1 + y2;
     if (total > 0) {
@@ -594,6 +1203,7 @@ function renderProjectionChart(history, m, c, currentPct) {
     afterDatasetsDraw(chart) {
       const { ctx, chartArea: { top, bottom }, scales: { x, y } } = chart;
       ctx.save();
+      const isMobile = window.innerWidth < 768;
 
       // Auxiliar: Dibujar rectángulos con bordes redondeados
       function roundRect(ctx, rx, ry, w, h, radius, fill, stroke) {
@@ -614,15 +1224,17 @@ function renderProjectionChart(history, m, c, currentPct) {
 
       // Auxiliar: Dibujar pequeñas etiquetas de porcentaje junto a los puntos
       function drawTextBadge(ctx, bx, by, text, color, alignLeft = false) {
-        ctx.font = 'bold 8px Poppins';
-        const w = ctx.measureText(text).width + 6;
-        const h = 13;
+        ctx.font = 'bold 13px Poppins';
+        const w = ctx.measureText(text).width + 16;
+        const h = 24;
+        let startX = alignLeft ? bx : bx - w / 2;
+        // Limitar coordenadas de la etiqueta dentro del área de la gráfica
+        startX = Math.max(chart.chartArea.left + 5, Math.min(chart.chartArea.right - w - 5, startX));
         ctx.fillStyle = color;
-        const startX = alignLeft ? bx : bx - w / 2;
-        roundRect(ctx, startX, by - h/2, w, h, 3, true, false);
+        roundRect(ctx, startX, by - h/2, w, h, 4, true, false);
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
-        ctx.fillText(text, startX + w / 2, by + 3.5);
+        ctx.fillText(text, startX + w / 2, by + 5.5);
       }
 
       // 1. DIBUJAR LÍNEA VERTICAL Y GLOBO PARA "ACTUAL"
@@ -636,21 +1248,29 @@ function renderProjectionChart(history, m, c, currentPct) {
       ctx.stroke();
       ctx.setLineDash([]); // Resetear patrón
       
-      // Globo "ACTUAL" arriba
-      ctx.fillStyle = '#0284c7';
-      const actW = 82;
-      const actH = 29;
-      const actY = top - 34;
-      roundRect(ctx, actualXPixel - actW / 2, actY, actW, actH, 4, true, false);
-      
-      ctx.fillStyle = '#fff';
-      ctx.textAlign = 'center';
-      ctx.font = 'bold 7px Poppins';
-      ctx.fillText('ACTUAL', actualXPixel, actY + 9);
-      ctx.font = 'bold 9px Poppins';
-      ctx.fillText(`${currentPct.toFixed(3)}%`, actualXPixel, actY + 18);
-      ctx.font = 'normal 6px Poppins';
-      ctx.fillText('actas contabilizadas', actualXPixel, actY + 25);
+      if (!isMobile) {
+        // Globo "ACTUAL" arriba (dibujado adentro de la gráfica)
+        ctx.fillStyle = '#0284c7';
+        const actW = 140;
+        const actH = 55;
+        const actY = top + 15;
+        
+        // Limitar el globo dentro de la gráfica
+        let actLeft = actualXPixel - actW / 2;
+        actLeft = Math.max(chart.chartArea.left + 5, Math.min(chart.chartArea.right - actW - 5, actLeft));
+        const actCenterX = actLeft + actW / 2;
+        
+        roundRect(ctx, actLeft, actY, actW, actH, 6, true, false);
+        
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 11px Poppins';
+        ctx.fillText('ACTUAL', actCenterX, actY + 15);
+        ctx.font = 'bold 16px Poppins';
+        ctx.fillText(`${currentPct.toFixed(3)}%`, actCenterX, actY + 33);
+        ctx.font = 'normal 9.5px Poppins';
+        ctx.fillText('actas contabilizadas', actCenterX, actY + 47);
+      }
 
       // 2. DIBUJAR LÍNEA VERTICAL Y GLOBO PARA "PROYECCIÓN FINAL"
       const finalXPixel = x.getPixelForValue(100);
@@ -663,24 +1283,32 @@ function renderProjectionChart(history, m, c, currentPct) {
       ctx.stroke();
       ctx.setLineDash([]); // Reset
       
-      // Globo "PROYECCIÓN FINAL" arriba
-      ctx.fillStyle = '#1e3a8a';
-      const projW = 82;
-      const projH = 29;
-      const projY = top - 34;
-      roundRect(ctx, finalXPixel - projW / 2, projY, projW, projH, 4, true, false);
-      
-      ctx.fillStyle = '#fff';
-      ctx.textAlign = 'center';
-      ctx.font = 'bold 7px Poppins';
-      ctx.fillText('PROYECCIÓN FINAL', finalXPixel, projY + 9);
-      ctx.font = 'bold 9px Poppins';
-      ctx.fillText('100%', finalXPixel, projY + 18);
-      ctx.font = 'normal 6px Poppins';
-      ctx.fillText('actas contabilizadas', finalXPixel, projY + 25);
+      if (!isMobile) {
+        // Globo "PROYECCIÓN FINAL" abajo (dibujado adentro de la gráfica)
+        ctx.fillStyle = '#1e3a8a';
+        const projW = 140;
+        const projH = 55;
+        const projY = bottom - 70;
+        
+        // Limitar el globo dentro de la gráfica
+        let projLeft = finalXPixel - projW / 2;
+        projLeft = Math.max(chart.chartArea.left + 5, Math.min(chart.chartArea.right - projW - 5, projLeft));
+        const projCenterX = projLeft + projW / 2;
+        
+        roundRect(ctx, projLeft, projY, projW, projH, 6, true, false);
+        
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 11px Poppins';
+        ctx.fillText('PROYECCIÓN FINAL', projCenterX, projY + 15);
+        ctx.font = 'bold 16px Poppins';
+        ctx.fillText('100%', projCenterX, projY + 33);
+        ctx.font = 'normal 9.5px Poppins';
+        ctx.fillText('actas contabilizadas', projCenterX, projY + 47);
+      }
 
       // 3. DIBUJAR GLOBO DEL PUNTO DE QUIEBRE
-      if (tiePct !== null && tiePct > currentPct && tiePct <= 100) {
+      if (!isMobile && tiePct !== null && tiePct > currentPct && tiePct <= 100) {
         const breakX = x.getPixelForValue(tiePct);
         const breakY = y.getPixelForValue(50.00);
         
@@ -692,24 +1320,26 @@ function renderProjectionChart(history, m, c, currentPct) {
         const txt2 = `Cruce estimado: ${tiePct.toFixed(2)}%`;
         const txt3 = 'Ambos: 50.00%';
         
-        ctx.font = 'bold 8px Poppins';
+        ctx.font = 'bold 10px Poppins';
         const w1 = ctx.measureText(txt1).width;
-        ctx.font = 'normal 8px Poppins';
+        ctx.font = 'normal 10px Poppins';
         const w2 = ctx.measureText(txt2).width;
         const w3 = ctx.measureText(txt3).width;
-        const width = Math.max(w1, w2, w3) + 12;
-        const height = 38;
+        const width = Math.max(w1, w2, w3) + 16;
+        const height = 52;
         
-        const rectX = breakX - width / 2;
-        const rectY = breakY - height - 8;
+        let rectX = breakX - width / 2;
+        rectX = Math.max(chart.chartArea.left + 5, Math.min(chart.chartArea.right - width - 5, rectX));
+        const breakCenterX = rectX + width / 2;
+        const rectY = breakY - height - 10;
         
-        roundRect(ctx, rectX, rectY, width, height, 5, true, true);
+        roundRect(ctx, rectX, rectY, width, height, 6, true, true);
         
         // Flechita apuntadora
         ctx.beginPath();
-        ctx.moveTo(breakX - 5, rectY + height);
-        ctx.lineTo(breakX, rectY + height + 5);
-        ctx.lineTo(breakX + 5, rectY + height);
+        ctx.moveTo(breakX - 6, rectY + height);
+        ctx.lineTo(breakX, rectY + height + 6);
+        ctx.lineTo(breakX + 6, rectY + height);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
@@ -717,15 +1347,15 @@ function renderProjectionChart(history, m, c, currentPct) {
         // Dibujar textos dentro del globo
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
-        ctx.font = 'bold 8px Poppins';
-        ctx.fillText(txt1, breakX, rectY + 11);
-        ctx.font = 'normal 7.5px Poppins';
-        ctx.fillText(txt2, breakX, rectY + 21);
-        ctx.fillText(txt3, breakX, rectY + 31);
+        ctx.font = 'bold 10px Poppins';
+        ctx.fillText(txt1, breakCenterX, rectY + 15);
+        ctx.font = 'normal 9.5px Poppins';
+        ctx.fillText(txt2, breakCenterX, rectY + 30);
+        ctx.fillText(txt3, breakCenterX, rectY + 44);
       }
 
       // 4. DIBUJAR VALORES EN LOS PUNTOS ACTUALES
-      if (actualK.length > 0 && actualR.length > 0) {
+      if (!isMobile && actualK.length > 0 && actualR.length > 0) {
         const ptK = actualK[actualK.length - 1];
         const ptR = actualR[actualR.length - 1];
         
@@ -734,14 +1364,18 @@ function renderProjectionChart(history, m, c, currentPct) {
         const pixelXR = x.getPixelForValue(ptR.x);
         const pixelYR = y.getPixelForValue(ptR.y);
         
+        const isKGreaterActual = ptK.y >= ptR.y;
+        const offsetKActual = isKGreaterActual ? -14 : 14;
+        const offsetRActual = isKGreaterActual ? 14 : -14;
+        
         // Keiko actual
-        drawTextBadge(ctx, pixelXK - 38, pixelYK - 9, `K ${ptK.y.toFixed(3)}%`, '#ea580c');
+        drawTextBadge(ctx, pixelXK - 45, pixelYK + offsetKActual, `K ${ptK.y.toFixed(3)}%`, '#ea580c');
         // Roberto actual
-        drawTextBadge(ctx, pixelXR - 38, pixelYR + 9, `JP ${ptR.y.toFixed(3)}%`, '#0e9f6e');
+        drawTextBadge(ctx, pixelXR - 45, pixelYR + offsetRActual, `JP ${ptR.y.toFixed(3)}%`, '#0e9f6e');
       }
 
       // 5. DIBUJAR VALORES AL FINAL DE LA PROYECCIÓN (100%)
-      if (projK.length > 0 && projR.length > 0) {
+      if (!isMobile && projK.length > 0 && projR.length > 0) {
         const ptK = projK[projK.length - 1];
         const ptR = projR[projR.length - 1];
         
@@ -750,10 +1384,14 @@ function renderProjectionChart(history, m, c, currentPct) {
         const pixelXR = x.getPixelForValue(ptR.x);
         const pixelYR = y.getPixelForValue(ptR.y);
         
+        const isKGreaterProj = ptK.y >= ptR.y;
+        const offsetKProj = isKGreaterProj ? -14 : 14;
+        const offsetRProj = isKGreaterProj ? 14 : -14;
+        
         // Keiko final
-        drawTextBadge(ctx, pixelXK + 8, pixelYK, `${ptK.y.toFixed(2)}%`, '#ea580c', true);
+        drawTextBadge(ctx, pixelXK - 45, pixelYK + offsetKProj, `${ptK.y.toFixed(2)}%`, '#ea580c');
         // Roberto final
-        drawTextBadge(ctx, pixelXR + 8, pixelYR, `${ptR.y.toFixed(2)}%`, '#0e9f6e', true);
+        drawTextBadge(ctx, pixelXR - 45, pixelYR + offsetRProj, `${ptR.y.toFixed(2)}%`, '#0e9f6e');
       }
 
       ctx.restore();
@@ -776,9 +1414,9 @@ function renderProjectionChart(history, m, c, currentPct) {
           data: actualK,
           borderColor: '#ea580c', // Naranja Keiko
           backgroundColor: 'transparent',
-          borderWidth: 3,
-          pointRadius: 4,
-          pointBackgroundColor: '#ea580c',
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 0,
           tension: 0.2,
           fill: false
         },
@@ -798,9 +1436,9 @@ function renderProjectionChart(history, m, c, currentPct) {
           data: actualR,
           borderColor: '#0e9f6e', // Verde Roberto
           backgroundColor: 'transparent',
-          borderWidth: 3,
-          pointRadius: 4,
-          pointBackgroundColor: '#0e9f6e',
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 0,
           tension: 0.2,
           fill: false
         },
@@ -832,6 +1470,11 @@ function renderProjectionChart(history, m, c, currentPct) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
+      },
       layout: {
         padding: {
           top: 38,
@@ -852,7 +1495,28 @@ function renderProjectionChart(history, m, c, currentPct) {
           bodyColor: '#fff',
           borderColor: '#252a3d',
           borderWidth: 1,
-          padding: 12,
+          padding: 14,
+          titleFont: {
+            family: 'Poppins',
+            size: 14,
+            weight: 'bold'
+          },
+          bodyFont: {
+            family: 'Poppins',
+            size: 14
+          },
+          itemSort: function(a, b) {
+            return b.parsed.y - a.parsed.y; // Ordena de mayor a menor porcentaje
+          },
+          filter: function(tooltipItem) {
+            const xVal = tooltipItem.parsed.x;
+            const label = tooltipItem.dataset.label;
+            if (xVal < currentPct) {
+              return label.includes('(Real)');
+            } else {
+              return label.includes('(Proyección)') || label === 'Punto de Quiebre';
+            }
+          },
           callbacks: {
             title: function(context) {
               const xVal = context[0].parsed.x;
@@ -872,7 +1536,7 @@ function renderProjectionChart(history, m, c, currentPct) {
       scales: {
         x: {
           type: 'linear',
-          min: xMin,
+          min: 93.5,
           max: 100,
           grid: {
             color: 'rgba(255, 255, 255, 0.05)',
@@ -880,7 +1544,7 @@ function renderProjectionChart(history, m, c, currentPct) {
           },
           ticks: {
             color: '#8b949e',
-            font: { family: 'Poppins', size: 10 },
+            font: { family: 'Poppins', size: 12 },
             callback: function(value) {
               return `${value}%`;
             }
@@ -889,17 +1553,19 @@ function renderProjectionChart(history, m, c, currentPct) {
             display: true,
             text: '% de Actas Contabilizadas',
             color: '#8b949e',
-            font: { family: 'Poppins', size: 11 }
+            font: { family: 'Poppins', size: 13 }
           }
         },
         y: {
+          min: 45,
+          max: 55,
           grid: {
             color: 'rgba(255, 255, 255, 0.05)',
             borderColor: 'rgba(255, 255, 255, 0.1)'
           },
           ticks: {
             color: '#8b949e',
-            font: { family: 'Poppins', size: 10 },
+            font: { family: 'Poppins', size: 12 },
             callback: function(value) {
               return `${value}%`;
             }
@@ -908,7 +1574,7 @@ function renderProjectionChart(history, m, c, currentPct) {
             display: true,
             text: '% de Votos Válidos',
             color: '#8b949e',
-            font: { family: 'Poppins', size: 11 }
+            font: { family: 'Poppins', size: 13 }
           }
         }
       }

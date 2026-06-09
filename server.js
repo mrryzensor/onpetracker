@@ -56,13 +56,14 @@ async function processAndSaveData(scrapedData) {
     console.log('Base de datos vacía, insertando primer registro...');
     hasChanged = true;
   } else {
-    // Verificar si los datos clave han cambiado (votos o actas contabilizadas)
+    // Verificar si los datos clave o el timestamp oficial de la ONPE han cambiado
     const diffCandidato1 = scrapedData.candidato1_votos !== latestRecord.candidato1_votos;
     const diffCandidato2 = scrapedData.candidato2_votos !== latestRecord.candidato2_votos;
     const diffActas = scrapedData.actas_contabilizadas !== latestRecord.actas_contabilizadas;
+    const diffTimestamp = scrapedData.timestamp_onpe !== latestRecord.onpe_timestamp;
     
-    if (diffCandidato1 || diffCandidato2 || diffActas) {
-      console.log('¡Se detectaron cambios en los datos de la ONPE!');
+    if (diffCandidato1 || diffCandidato2 || diffActas || diffTimestamp) {
+      console.log('¡Se detectaron cambios o un nuevo reporte oficial de la ONPE!');
       hasChanged = true;
     } else {
       console.log('Los datos de la ONPE no presentan cambios respecto al último registro local.');

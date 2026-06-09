@@ -1,4 +1,6 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin());
 
 // Función auxiliar para limpiar números como "8'768,586" o "86,706" a enteros
 function parseCleanInt(str) {
@@ -34,8 +36,15 @@ async function scrapeONPE() {
     // User Agent realista
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     
-    console.log('Cargando la página de la ONPE...');
-    await page.goto('https://resultadosegundavuelta.onpe.gob.pe/main/resumen', {
+    // Desactivar caché para evitar traer datos viejos
+    await page.setCacheEnabled(false);
+    await page.setExtraHTTPHeaders({
+      'Pragma': 'no-cache',
+      'Cache-Control': 'no-cache'
+    });
+    
+    console.log('Cargando la página de la ONPE con cache-busting...');
+    await page.goto('https://resultadosegundavuelta.onpe.gob.pe/main/resumen?t=' + Date.now(), {
       waitUntil: 'networkidle2',
       timeout: 60000
     });
@@ -138,17 +147,27 @@ async function scrapeONPE() {
       votos_blancos_pct: 0
     };
 
-    // Procesar los candidatos extraídos
+    // Procesar los candidatos extraídos y asignarlos de forma consistente
+    // Candidato 1 = Keiko Fujimori (Fuerza Popular)
+    // Candidato 2 = Roberto Sanchez (Juntos por el Perú)
     if (rawData.candidates && rawData.candidates.length >= 2) {
-      parsedData.candidato1_nombre = rawData.candidates[0].name.trim();
-      parsedData.candidato1_partido = rawData.candidates[0].party.trim();
-      parsedData.candidato1_votos = parseCleanInt(rawData.candidates[0].votes);
-      parsedData.candidato1_pct = parseCleanFloat(rawData.candidates[0].pct);
+      const cA = rawData.candidates[0];
+      const cB = rawData.candidates[1];
+      
+      const isAKeiko = cA.name.toUpperCase().includes('FUJIMORI') || cA.party.toUpperCase().includes('FUERZA');
+      
+      const keiko = isAKeiko ? cA : cB;
+      const roberto = isAKeiko ? cB : cA;
 
-      parsedData.candidato2_nombre = rawData.candidates[1].name.trim();
-      parsedData.candidato2_partido = rawData.candidates[1].party.trim();
-      parsedData.candidato2_votos = parseCleanInt(rawData.candidates[1].votes);
-      parsedData.candidato2_pct = parseCleanFloat(rawData.candidates[1].pct);
+      parsedData.candidato1_nombre = keiko.name.trim();
+      parsedData.candidato1_partido = keiko.party.trim();
+      parsedData.candidato1_votos = parseCleanInt(keiko.votes);
+      parsedData.candidato1_pct = parseCleanFloat(keiko.pct);
+
+      parsedData.candidato2_nombre = roberto.name.trim();
+      parsedData.candidato2_partido = roberto.party.trim();
+      parsedData.candidato2_votos = parseCleanInt(roberto.votes);
+      parsedData.candidato2_pct = parseCleanFloat(roberto.pct);
     } else {
       // Fallback por si acaso la estructura fallara, intentamos buscar con expresiones regulares en todo el texto del body
       console.warn('Estructura de tarjetas de candidatos no detectada, aplicando regex fallback...');

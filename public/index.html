@@ -76,6 +76,42 @@
         </div>
       </section>
 
+      <!-- Mathematical Victory / Irreversibility Card -->
+      <section class="card victory-card full-width" id="victory-status-card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-graduation-cap"></i> Umbral de Irreversibilidad Matemática</h2>
+          <span class="status-badge" id="victory-status-badge">Matemáticamente Abierto</span>
+        </div>
+        <div class="victory-grid">
+          <div class="victory-metric-box">
+            <span class="victory-label">Diferencia de Votos Actual</span>
+            <span class="victory-value" id="victory-current-gap">-</span>
+          </div>
+          <div class="victory-metric-box">
+            <span class="victory-label">Votos Restantes por Escrutar (Est.)</span>
+            <span class="victory-value" id="victory-remaining-votes">-</span>
+          </div>
+          <div class="victory-progress-container">
+            <div class="victory-progress-header">
+              <span>Progreso hacia la Victoria Matemática</span>
+              <span id="victory-progress-pct-text">0%</span>
+            </div>
+            <div class="victory-progress-bar-wrapper">
+              <div class="victory-progress-bar" id="victory-progress-bar" style="width: 0%"></div>
+            </div>
+            <p class="victory-explanation" id="victory-explanation-text">
+              Cargando análisis de irreversibilidad...
+            </p>
+          </div>
+          <div class="victory-chart-box">
+            <div class="victory-chart-title">Votos Restantes Requeridos</div>
+            <div class="victory-canvas-container">
+              <canvas id="victoryChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Candidates Score Card -->
       <section class="card candidates-card">
         <div class="card-header">
@@ -84,9 +120,9 @@
         <div class="candidates-split">
           
           <!-- Candidate 1 -->
-          <div class="candidate-row candidate-left">
+          <div class="candidate-row candidate-left" id="c1-row">
             <div class="candidate-avatar">
-              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" alt="Keiko Fujimori" class="candidate-photo">
+              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" alt="Keiko Fujimori" class="candidate-photo" id="c1-photo">
             </div>
             <div class="candidate-meta">
               <h3 id="c1-name">Candidato A</h3>
@@ -101,9 +137,9 @@
           <div class="vs-divider">VS</div>
 
           <!-- Candidate 2 -->
-          <div class="candidate-row candidate-right">
+          <div class="candidate-row candidate-right" id="c2-row">
             <div class="candidate-avatar">
-              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" alt="Roberto Sánchez" class="candidate-photo">
+              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" alt="Roberto Sánchez" class="candidate-photo" id="c2-photo">
             </div>
             <div class="candidate-meta">
               <h3 id="c2-name">Candidato B</h3>
@@ -165,6 +201,187 @@
         </div>
         <div class="chart-container projection-chart-container">
           <canvas id="projectionChart"></canvas>
+        </div>
+      </section>
+      
+      <!-- Regional Impact Card -->
+      <section class="card regional-card full-width">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-map-location-dot"></i> Impacto Estimado de Actas Pendientes por Región</h2>
+          <span class="hint-text">Simulación basada en la distribución histórica y de tendencia de las actas restantes</span>
+        </div>
+        <div class="regional-container">
+          <!-- Column 1: Faltan por contar -->
+          <div class="regional-section-box">
+            <div class="section-title">¿Qué falta contar?</div>
+            <div class="pending-overview">
+              <div class="pending-total-val" id="reg-pending-votes-val">-</div>
+              <div class="pending-total-label">votos válidos por contabilizar (<span id="reg-pending-pct-val">-</span> del total)</div>
+            </div>
+            <div class="regional-distribution-list">
+              <div class="regional-dist-item">
+                <span class="dist-icon"><i class="fa-solid fa-earth-americas"></i></span>
+                <div class="dist-details">
+                  <span class="dist-name">Extranjero</span>
+                  <span class="dist-votes" id="reg-pending-ext-val">- votos</span>
+                  <span class="dist-pct">(45.6% del pendiente)</span>
+                </div>
+              </div>
+              <div class="regional-dist-item">
+                <span class="dist-icon"><i class="fa-solid fa-city"></i></span>
+                <div class="dist-details">
+                  <span class="dist-name">Lima</span>
+                  <span class="dist-votes" id="reg-pending-lim-val">- votos</span>
+                  <span class="dist-pct">(19.9% del pendiente)</span>
+                </div>
+              </div>
+              <div class="regional-dist-item">
+                <span class="dist-icon"><i class="fa-solid fa-tree"></i></span>
+                <div class="dist-details">
+                  <span class="dist-name">Loreto</span>
+                  <span class="dist-votes" id="reg-pending-lor-val">- votos</span>
+                  <span class="dist-pct">(11.6% del pendiente)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Impacto neto por regiones clave -->
+          <div class="regional-section-box">
+            <div class="section-title">Impacto Neto en Diferencia de Votos</div>
+            <div class="impact-split-container">
+              <!-- Keiko columns -->
+              <div class="impact-column col-keiko">
+                <div class="column-header-cand c1-title">Suman más a Keiko</div>
+                <div class="impact-bar-item">
+                  <div class="impact-bar-label">Extranjero <span class="impact-bar-value" id="reg-impact-ext-k">-</span></div>
+                  <div class="impact-bar-wrapper">
+                    <div class="impact-bar bg-c1" id="reg-bar-ext-k" style="width: 0%"></div>
+                  </div>
+                  <div class="impact-bar-details" id="reg-details-ext-k">-</div>
+                </div>
+                <div class="impact-bar-item">
+                  <div class="impact-bar-label">Lima <span class="impact-bar-value" id="reg-impact-lim-k">-</span></div>
+                  <div class="impact-bar-wrapper">
+                    <div class="impact-bar bg-c1" id="reg-bar-lim-k" style="width: 0%"></div>
+                  </div>
+                  <div class="impact-bar-details" id="reg-details-lim-k">-</div>
+                </div>
+                <div class="impact-bar-item">
+                  <div class="impact-bar-label">Loreto <span class="impact-bar-value" id="reg-impact-lor-k">-</span></div>
+                  <div class="impact-bar-wrapper">
+                    <div class="impact-bar bg-c1" id="reg-bar-lor-k" style="width: 0%"></div>
+                  </div>
+                  <div class="impact-bar-details" id="reg-details-lor-k">-</div>
+                </div>
+              </div>
+
+              <!-- Roberto columns -->
+              <div class="impact-column col-roberto">
+                <div class="column-header-cand c2-title">Suman más a Roberto</div>
+                <div class="impact-bar-item">
+                  <div class="impact-bar-label">Cusco <span class="impact-bar-value" id="reg-impact-cus-r">-</span></div>
+                  <div class="impact-bar-wrapper">
+                    <div class="impact-bar bg-c2" id="reg-bar-cus-r" style="width: 0%"></div>
+                  </div>
+                  <div class="impact-bar-details" id="reg-details-cus-r">-</div>
+                </div>
+                <div class="impact-bar-item">
+                  <div class="impact-bar-label">Ayacucho <span class="impact-bar-value" id="reg-impact-aya-r">-</span></div>
+                  <div class="impact-bar-wrapper">
+                    <div class="impact-bar bg-c2" id="reg-bar-aya-r" style="width: 0%"></div>
+                  </div>
+                  <div class="impact-bar-details" id="reg-details-aya-r">-</div>
+                </div>
+                <div class="impact-bar-item">
+                  <div class="impact-bar-label">Amazonas <span class="impact-bar-value" id="reg-impact-ama-r">-</span></div>
+                  <div class="impact-bar-wrapper">
+                    <div class="impact-bar bg-c2" id="reg-bar-ama-r" style="width: 0%"></div>
+                  </div>
+                  <div class="impact-bar-details" id="reg-details-ama-r">-</div>
+                </div>
+              </div>
+            </div>
+            <div class="lima-breakdown-trigger-area">
+              <button id="btn-toggle-lima-breakdown" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-list-check"></i> Ver Proyección por Provincias de Lima
+              </button>
+            </div>
+          </div>
+
+          <!-- Column 3: Balance Nacional y Proyección Final -->
+          <div class="regional-section-box">
+            <div class="section-title">Balance de Votos Pendientes</div>
+            <div class="balance-card">
+              <div class="balance-line">
+                <span>Total Estimado Keiko:</span>
+                <span class="balance-value c1-text" id="reg-balance-k">+0</span>
+              </div>
+              <div class="balance-line">
+                <span>Total Estimado Roberto:</span>
+                <span class="balance-value c2-text" id="reg-balance-r">+0</span>
+              </div>
+              <div class="balance-divider"></div>
+              <div class="balance-net-line">
+                <span>Diferencia Neta:</span>
+                <span class="balance-net-value" id="reg-balance-net">-</span>
+              </div>
+              <div class="balance-winner-badge" id="reg-balance-winner">Proyectando...</div>
+            </div>
+            <div class="projection-final-100">
+              <div class="proj-final-title">Proyección Final al 100% de Actas</div>
+              <div class="proj-final-grid">
+                <div class="proj-final-metric">
+                  <span class="proj-name">Keiko Fujimori</span>
+                  <span class="proj-votes" id="reg-final-votes-k">- votos</span>
+                  <span class="proj-pct" id="reg-final-pct-k">- %</span>
+                </div>
+                <div class="proj-final-metric">
+                  <span class="proj-name">Roberto Sánchez</span>
+                  <span class="proj-votes" id="reg-final-votes-r">- votos</span>
+                  <span class="proj-pct" id="reg-final-pct-r">- %</span>
+                </div>
+              </div>
+              <div class="proj-final-difference" id="reg-final-diff-val">
+                Diferencia Proyectada: <strong>-</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible Panel for Lima Provincias/Distritos JEE Breakdown -->
+        <div class="lima-breakdown-panel collapsed" id="lima-breakdown-panel">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-map-location"></i> Detalle de Actas Enviadas al JEE - Provincias y Distritos de Lima</h3>
+            <button id="btn-close-lima-breakdown" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="table-responsive">
+            <table class="lima-provincias-table">
+              <thead>
+                <tr>
+                  <th>Provincia / Distrito</th>
+                  <th>Actas JEE (Est.)</th>
+                  <th>Votos JEE (Est.)</th>
+                  <th>Tendencia (% Keiko / % Roberto)</th>
+                  <th>Votos Keiko (Est.)</th>
+                  <th>Votos Roberto (Est.)</th>
+                  <th>Impacto Neto</th>
+                </tr>
+              </thead>
+              <tbody id="lima-breakdown-body">
+                <!-- Poblado dinámicamente por JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="regional-methodology-note">
+          <i class="fa-solid fa-circle-info"></i> <span><strong>Metodología de Proyección Regional:</strong> Los márgenes de votación y las proporciones de actas por escrutar se basan en el análisis estadístico de la distribución geográfica de actas de la primera vuelta 2026 y series históricas de la ONPE para votación en el extranjero y regiones clave.</span>
+        </div>
+
+        <div class="regional-summary-footer">
+          <div class="summary-icon"><i class="fa-solid fa-lightbulb"></i></div>
+          <p class="summary-text" id="reg-summary-text">Cargando proyección regional...</p>
         </div>
       </section>
 
