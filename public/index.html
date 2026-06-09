@@ -39,6 +39,9 @@
           <a href="#" id="bookmarklet-link" class="btn btn-secondary bookmarklet-btn" title="Arrastra este botón a tu barra de marcadores">
             <i class="fa-solid fa-bookmark"></i> Marcador ONPE
           </a>
+          <button id="btn-manual-paste" class="btn btn-tertiary" title="Pegar texto copiado de la ONPE">
+            <i class="fa-solid fa-paste"></i> Pegar Reporte
+          </button>
         </div>
       </div>
     </header>
@@ -423,6 +426,25 @@
     <footer class="app-footer">
       <p>ONPE Tracker Local &copy; 2026 - Conexión directa con la ONPE a través de Puppeteer y SQLite</p>
     </footer>
+  </div>
+
+  <!-- Modal para Pegar Reporte Manual -->
+  <div id="paste-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-paste"></i> Pegar Reporte de la ONPE</h3>
+        <button id="btn-close-modal" class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Abre la página oficial de la ONPE, selecciona todo el texto (<strong>Ctrl + A</strong>), cópialo (<strong>Ctrl + C</strong>) y pégalo completo aquí:</p>
+        <textarea id="paste-textarea" placeholder="Pega el contenido completo de la página de la ONPE aquí..." rows="12"></textarea>
+        <div class="modal-actions">
+          <button id="btn-process-paste" class="btn btn-primary">
+            <i class="fa-solid fa-bolt"></i> Procesar Reporte
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>

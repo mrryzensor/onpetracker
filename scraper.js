@@ -225,6 +225,129 @@ async function scrapeONPE() {
   }
 }
 
+function parseRawText(bodyText) {
+  if (!bodyText) {
+    throw new Error('El texto provisto está vacío');
+  }
+
+  // 1. Buscar timestamp_onpe
+  let timestamp_onpe = '';
+  const tsMatch = bodyText.match(/ACTUALIZADO AL\s+([^\n\r]+)/i);
+  if (tsMatch) {
+    timestamp_onpe = tsMatch[1].trim();
+  } else {
+    // Si no lo encuentra, usar la hora actual como fallback para que no falle la validación
+    const now = new Date();
+    timestamp_onpe = now.toLocaleString('es-PE', { timeZone: 'America/Lima' });
+  }
+
+  // Helper functions
+  const cleanInt = (str) => parseInt((str || '').replace(/['\s,votos()]/g, '')) || 0;
+  const cleanFloat = (str) => parseFloat((str || '').replace(/[%'\s,]/g, '')) || 0;
+
+  // 2. Buscar actas contabilizadas
+  let actas_contabilizadas = 0;
+  let actas_contabilizadas_pct = 0;
+
+  // Buscar "Contabilizadas (XX.XXX%) YY,YYY" o "Contabilizadas: YY,YYY" o similares
+  const contMatch = bodyText.match(/Contabilizadas\s*(?:\(([\d.]+)%\))?\s*([\d,']+)/i);
+  if (contMatch) {
+    actas_contabilizadas = cleanInt(contMatch[2]);
+    if (contMatch[1]) {
+      actas_contabilizadas_pct = cleanFloat(contMatch[1]);
+    }
+  }
+
+  // Si no se encontró el porcentaje directo de actas contabilizadas, buscar en el texto
+  if (actas_contabilizadas_pct === 0) {
+    const contPctMatch = bodyText.match(/Actas contabilizadas\s*([\d.]+)%/i);
+    if (contPctMatch) {
+      actas_contabilizadas_pct = cleanFloat(contPctMatch[1]);
+    }
+  }
+
+  // 3. Buscar para envío al JEE
+  let actas_jee = 0;
+  const jeeMatch = bodyText.match(/Para envío al JEE\s*(?:\(([\d.]+)%\))?\s*([\d,']+)/i);
+  if (jeeMatch) {
+    actas_jee = cleanInt(jeeMatch[2]);
+  }
+
+  // 4. Calcular procesadas
+  const actas_procesadas = actas_contabilizadas + actas_jee;
+  let actas_procesadas_pct = actas_contabilizadas_pct;
+
+  const totalActasMatch = bodyText.match(/Total de actas:\s*([\d,']+)/i);
+  if (totalActasMatch) {
+    const total = cleanInt(totalActasMatch[1]);
+    if (total > 0) {
+      actas_procesadas_pct = parseFloat(((actas_procesadas / total) * 100).toFixed(3));
+    }
+  }
+
+  // 5. Buscar candidatos
+  let candidato1_nombre = 'KEIKO SOFIA FUJIMORI HIGUCHI';
+  let candidato1_partido = 'FUERZA POPULAR';
+  let candidato1_votos = 0;
+  let candidato1_pct = 0;
+
+  let candidato2_nombre = 'ROBERTO HELBERT SANCHEZ PALOMINO';
+  let candidato2_partido = 'JUNTOS POR EL PERÚ';
+  let candidato2_votos = 0;
+  let candidato2_pct = 0;
+
+  // Intentar parsear Keiko
+  const keikoMatch1 = bodyText.match(/KEIKO SOFIA FUJIMORI[\s\S]*?([\d.]+)\s*%\s*([\d',]+)\s*votos/i);
+  const keikoMatch2 = bodyText.match(/([\d.]+)\s*%\s*KEIKO SOFIA FUJIMORI[\s\S]*?([\d',]+)\s*votos/i);
+  
+  if (keikoMatch1) {
+    candidato1_pct = cleanFloat(keikoMatch1[1]);
+    candidato1_votos = cleanInt(keikoMatch1[2]);
+  } else if (keikoMatch2) {
+    candidato1_pct = cleanFloat(keikoMatch2[1]);
+    candidato1_votos = cleanInt(keikoMatch2[2]);
+  }
+
+  // Intentar parsear Roberto
+  const robertoMatch1 = bodyText.match(/ROBERTO HELBERT SANCHEZ[\s\S]*?([\d.]+)\s*%\s*([\d',]+)\s*votos/i);
+  const robertoMatch2 = bodyText.match(/([\d.]+)\s*%\s*ROBERTO HELBERT SANCHEZ[\s\S]*?([\d',]+)\s*votos/i);
+
+  if (robertoMatch1) {
+    candidato2_pct = cleanFloat(robertoMatch1[1]);
+    candidato2_votos = cleanInt(robertoMatch1[2]);
+  } else if (robertoMatch2) {
+    candidato2_pct = cleanFloat(robertoMatch2[1]);
+    candidato2_votos = cleanInt(robertoMatch2[2]);
+  }
+
+  // Si no se encuentra votos, lanzar error de validación
+  if (candidato1_votos === 0 || candidato2_votos === 0) {
+    throw new Error('No se pudieron extraer los votos de los candidatos del texto provisto. Asegúrate de copiar todo el contenido de la página de resultados de la ONPE.');
+  }
+
+  return {
+    timestamp_onpe,
+    actas_contabilizadas,
+    actas_contabilizadas_pct,
+    actas_procesadas,
+    actas_procesadas_pct,
+    candidato1_nombre,
+    candidato1_partido,
+    candidato1_votos,
+    candidato1_pct,
+    candidato2_nombre,
+    candidato2_partido,
+    candidato2_votos,
+    candidato2_pct,
+    votos_nulos: 0,
+    votos_nulos_pct: 0,
+    votos_blancos: 0,
+    votos_blancos_pct: 0
+  };
+}
+
 module.exports = {
-  scrapeONPE
+  scrapeONPE,
+  parseRawText
 };
+

@@ -3,7 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const cron = require('node-cron');
 const db = require('./db');
-const { scrapeONPE } = require('./scraper');
+const { scrapeONPE, parseRawText } = require('./scraper');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -98,6 +98,25 @@ if (!DISABLE_LOCAL_SCRAPER) {
 }
 
 // --- RUTA API ---
+
+// Endpoint para procesar y guardar texto plano copiado de la ONPE
+app.post('/api/parse-text', async (req, res) => {
+  const { text } = req.body;
+  if (!text) {
+    return res.status(400).json({ success: false, error: 'No se recibió ningún texto.' });
+  }
+  
+  try {
+    const parsedData = parseRawText(text);
+    const result = await processAndSaveData(parsedData);
+    lastSyncTime = new Date();
+    lastSyncError = null;
+    res.json({ success: true, saved: result.saved, id: result.id, data: parsedData });
+  } catch (err) {
+    console.error('Error al parsear texto manual:', err);
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
 
 // 1. Obtener estado de sincronización
 app.get('/api/sync-status', (req, res) => {

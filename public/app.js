@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadHistory();
   setupSyncButton();
   setupBookmarklet();
+  setupManualPaste();
   
   // Actualizar estado de sincronización cada 10 segundos
   setInterval(checkSyncStatus, 10000);
@@ -1639,11 +1640,11 @@ function setupBookmarklet() {
         totalActasText = totalActasSearch.parentElement?.innerText || '';
       }
 
-      const cleanInt = (str) => parseInt((str || '').replace(/['\\\\s,votos()]/g, '')) || 0;
-      const cleanFloat = (str) => parseFloat((str || '').replace(/[%'\\\\s,]/g, '')) || 0;
+      const cleanInt = (str) => parseInt((str || '').replace(/['\\s,votos()]/g, '')) || 0;
+      const cleanFloat = (str) => parseFloat((str || '').replace(/[%'\\s,]/g, '')) || 0;
 
       const data = {
-        timestamp_onpe: updatedText.replace(/ACTUALIZADO AL\\\\s+/i, '').trim(),
+        timestamp_onpe: updatedText.replace(/ACTUALIZADO AL\\s+/i, '').trim(),
         actas_contabilizadas: cleanInt(contabilizadasVal),
         actas_contabilizadas_pct: cleanFloat(pctContabilizadas),
         actas_procesadas: cleanInt(contabilizadasVal) + cleanInt(paraJeeVal),
@@ -1667,7 +1668,7 @@ function setupBookmarklet() {
         data.candidato2_pct = cleanFloat(roberto.pct);
       }
 
-      const totalActasMatch = totalActasText.match(/Total de actas:\\\\s*([\\\\d,']+)/i);
+      const totalActasMatch = totalActasText.match(/Total de actas:\\s*([\\d,']+)/i);
       if (totalActasMatch) {
         const total = cleanInt(totalActasMatch[1]);
         if (total > 0) {
@@ -1700,7 +1701,74 @@ function setupBookmarklet() {
     }
   })();`;
   
-  const cleanCode = code.replace(/\\n\\s*/g, ' ');
+  const cleanCode = code.replace(/\n\s*/g, ' ');
   bookmarkletLink.setAttribute('href', cleanCode);
+}
+
+// Configurar el modal de reporte manual (pegar texto)
+function setupManualPaste() {
+  const btnOpen = document.getElementById('btn-manual-paste');
+  const btnClose = document.getElementById('btn-close-modal');
+  const modal = document.getElementById('paste-modal');
+  const textarea = document.getElementById('paste-textarea');
+  const btnProcess = document.getElementById('btn-process-paste');
+
+  if (!btnOpen || !modal) return;
+
+  btnOpen.addEventListener('click', () => {
+    textarea.value = '';
+    modal.classList.remove('hidden');
+    textarea.focus();
+  });
+
+  const closeModal = () => {
+    modal.classList.add('hidden');
+  };
+
+  btnClose.addEventListener('click', closeModal);
+
+  // Cerrar al hacer clic fuera del contenido del modal
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+
+  btnProcess.addEventListener('click', async () => {
+    const text = textarea.value.trim();
+    if (!text) {
+      alert('Por favor pega el texto copiado de la ONPE.');
+      return;
+    }
+
+    try {
+      btnProcess.disabled = true;
+      btnProcess.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando...';
+
+      const res = await fetch('/api/parse-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text })
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        alert(result.saved ? '¡Reporte procesado e ingresado con éxito!' : 'Reporte procesado. No hay cambios nuevos en comparación con el último registro.');
+        closeModal();
+        await loadLatest();
+        await loadHistory();
+      } else {
+        alert('Error al procesar: ' + (result.error || 'Verifica el formato del texto'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de red al procesar el reporte manual.');
+    } finally {
+      btnProcess.disabled = false;
+      btnProcess.innerHTML = '<i class="fa-solid fa-bolt"></i> Procesar Reporte';
+    }
+  });
 }
 
