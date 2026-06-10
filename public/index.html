@@ -190,10 +190,15 @@
             <span class="victory-value" id="proj-tie-time">Calculando...</span>
             <span class="hint-text" id="proj-tie-pct">al - % de actas</span>
           </div>
-          <div class="projection-metric">
-            <span class="victory-label">Resultado Final Proyectado (100%)</span>
-            <span class="victory-value" id="proj-final-winner">Calculando...</span>
-            <span class="hint-text" id="proj-final-diff">Diferencia: - votos</span>
+          <div class="projection-metric" style="display:flex; align-items:center; gap:12px;">
+            <div id="projection-leader-face-container" style="display:none; align-items:center; justify-content:center;">
+              <img id="projection-leader-face" src="" style="width:40px; height:50px; object-fit:contain; border-radius:6px; border:1.5px solid rgba(255,255,255,0.2); background:#fff;" alt="Líder Proyectado">
+            </div>
+            <div style="display:flex; flex-direction:column;">
+              <span class="victory-label">Resultado Final Proyectado (100%)</span>
+              <span class="victory-value" id="proj-final-winner">Calculando...</span>
+              <span class="hint-text" id="proj-final-diff">Diferencia: - votos</span>
+            </div>
           </div>
         </div>
 

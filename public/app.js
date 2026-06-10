@@ -849,22 +849,41 @@ async function loadHistory() {
       const diff = row.candidato1_votos - row.candidato2_votos;
       const diffAbs = Math.abs(diff);
       
+      const unifiedTooltipHtml = `
+        <span class="tooltip-content" style="min-width: 180px;">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" style="width: 50px; height: 62px; object-fit: contain; background: #fff; border-radius: 4px; border: 1.5px solid #ff6c00;">
+              <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                <span style="font-weight: bold; color: #ff6c00; font-size: 0.8rem;">KEIKO</span>
+                <span style="color: #fff; font-size: 0.85rem; font-weight: 600;">${row.candidato1_pct.toFixed(3)}%</span>
+                <span style="color: var(--text-muted); font-size: 0.75rem;">${formatNumber(row.candidato1_votos)} votos</span>
+              </div>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px; display: flex; align-items: center; gap: 8px;">
+              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" style="width: 50px; height: 62px; object-fit: contain; background: #fff; border-radius: 4px; border: 1.5px solid #00c2a0;">
+              <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                <span style="font-weight: bold; color: #00c2a0; font-size: 0.8rem;">ROBERTO</span>
+                <span style="color: #fff; font-size: 0.85rem; font-weight: 600;">${row.candidato2_pct.toFixed(3)}%</span>
+                <span style="color: var(--text-muted); font-size: 0.75rem;">${formatNumber(row.candidato2_votos)} votos</span>
+              </div>
+            </div>
+          </div>
+        </span>
+      `;
+
       let winnerBadge = '';
       if (diff > 0) {
         winnerBadge = `
           <span class="badge badge-c1 tooltip-trigger">
             ${row.candidato1_nombre ? row.candidato1_nombre.split(' ')[0] : 'Keiko'}
-            <span class="tooltip-content">
-              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" style="width: 65px; height: 81px; object-fit: contain; background: #fff; border-radius: 6px; border: 1.5px solid #ff6c00;">
-            </span>
+            ${unifiedTooltipHtml}
           </span>`;
       } else if (diff < 0) {
         winnerBadge = `
           <span class="badge badge-c2 tooltip-trigger">
             ${row.candidato2_nombre ? row.candidato2_nombre.split(' ')[0] : 'Roberto'}
-            <span class="tooltip-content">
-              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" style="width: 65px; height: 81px; object-fit: contain; background: #fff; border-radius: 6px; border: 1.5px solid #00c2a0;">
-            </span>
+            ${unifiedTooltipHtml}
           </span>`;
       } else {
         winnerBadge = `<span class="badge">Empate</span>`;
@@ -876,15 +895,11 @@ async function loadHistory() {
         <td><strong>${row.actas_contabilizadas_pct.toFixed(3)}%</strong> (${formatNumber(row.actas_contabilizadas)})</td>
         <td class="tooltip-trigger" style="color: var(--color-c1); font-weight:600;">
           ${row.candidato1_pct.toFixed(3)}% <span style="font-size:0.75rem; color:var(--text-muted)">(${formatNumber(row.candidato1_votos)})</span>
-          <span class="tooltip-content">
-            <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" style="width: 65px; height: 81px; object-fit: contain; background: #fff; border-radius: 6px; border: 1.5px solid #ff6c00;">
-          </span>
+          ${unifiedTooltipHtml}
         </td>
         <td class="tooltip-trigger" style="color: var(--color-c2); font-weight:600;">
           ${row.candidato2_pct.toFixed(3)}% <span style="font-size:0.75rem; color:var(--text-muted)">(${formatNumber(row.candidato2_votos)})</span>
-          <span class="tooltip-content">
-            <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" style="width: 65px; height: 81px; object-fit: contain; background: #fff; border-radius: 6px; border: 1.5px solid #00c2a0;">
-          </span>
+          ${unifiedTooltipHtml}
         </td>
         <td><strong>${formatNumber(diffAbs)}</strong></td>
         <td>${winnerBadge}</td>
@@ -1109,15 +1124,31 @@ function updateProjection(history) {
   finalDiffEl.innerText = `${formatNumber(Math.round(finalDiffAbs))} votos`;
   finalPctsEl.innerHTML = `Keiko: <span style="color: var(--color-c1); font-weight:700;">${projC1Pct.toFixed(3)}%</span> | Roberto: <span style="color: var(--color-c2); font-weight:700;">${projC2Pct.toFixed(3)}%</span>`;
   
+  const projLeaderFaceContainer = document.getElementById('projection-leader-face-container');
+  const projLeaderFaceImg = document.getElementById('projection-leader-face');
+  
   if (finalDiff > 0) {
     finalWinnerEl.innerText = `Ventaja para Keiko (proyectado)`;
     finalWinnerEl.className = 'metric-percentage pct-c1';
+    if (projLeaderFaceContainer && projLeaderFaceImg) {
+      projLeaderFaceContainer.style.display = 'flex';
+      projLeaderFaceImg.src = 'https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png';
+      projLeaderFaceImg.style.borderColor = 'var(--color-c1)';
+    }
   } else if (finalDiff < 0) {
     finalWinnerEl.innerText = `Ventaja para Roberto (proyectado)`;
     finalWinnerEl.className = 'metric-percentage pct-c2';
+    if (projLeaderFaceContainer && projLeaderFaceImg) {
+      projLeaderFaceContainer.style.display = 'flex';
+      projLeaderFaceImg.src = 'https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png';
+      projLeaderFaceImg.style.borderColor = 'var(--color-c2)';
+    }
   } else {
     finalWinnerEl.innerText = 'Empate absoluto proyectado';
     finalWinnerEl.className = 'metric-percentage';
+    if (projLeaderFaceContainer) {
+      projLeaderFaceContainer.style.display = 'none';
+    }
   }
 
   // Analizar punto de empate

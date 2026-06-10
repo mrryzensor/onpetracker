@@ -534,6 +534,7 @@ body {
   position: relative;
   height: 280px;
   width: 100%;
+  z-index: 1;
 }
 
 .hint-text {
@@ -549,6 +550,8 @@ body {
   overflow-x: auto;  /* Mantener scroll horizontal en pantallas pequeñas */
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  position: relative;
+  z-index: 5;
 }
 
 .history-table {
