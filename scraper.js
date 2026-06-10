@@ -230,78 +230,109 @@ function parseRawText(bodyText) {
     throw new Error('El texto provisto está vacío');
   }
 
-  // Verificar si es JSON
-  let isJson = false;
-  let jsonData = null;
-  try {
-    jsonData = JSON.parse(bodyText.trim());
-    isJson = true;
-  } catch (e) {
-    // No es JSON, intentar parsear como texto plano
+  // Intentar parsear como múltiples JSONs por líneas
+  const lines = bodyText.split('\n');
+  const jsonObjects = [];
+  
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    try {
+      const parsed = JSON.parse(trimmed);
+      jsonObjects.push(parsed);
+    } catch (e) {
+      // Ignorar errores de líneas individuales (ej. texto plano mezclado)
+    }
   }
 
-  if (isJson && jsonData) {
-    // Si es el JSON de Totales
-    if (jsonData.data && typeof jsonData.data.actasContabilizadas !== 'undefined') {
-      const d = jsonData.data;
-      const date = new Date(d.fechaActualizacion);
-      // Formatear la fecha
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      let hours = date.getHours();
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const seconds = String(date.getSeconds()).padStart(2, '0');
-      const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
-      hours = hours % 12;
-      hours = hours ? hours : 12; // el cero se convierte en 12
-      const formattedHours = String(hours).padStart(2, '0');
-      
-      const timestamp_onpe = `${day}/${month}/${year} A LAS ${formattedHours}:${minutes}:${seconds} ${ampm}`;
-      
-      const total = d.totalActas || 92766;
-      const actas_procesadas = d.contabilizadas + (d.enviadasJee || 0);
-      const actas_procesadas_pct = parseFloat(((actas_procesadas / total) * 100).toFixed(3));
-
-      return {
-        type: 'totales',
-        timestamp_onpe,
-        actas_contabilizadas: d.contabilizadas,
-        actas_contabilizadas_pct: d.actasContabilizadas,
-        actas_procesadas,
-        actas_procesadas_pct,
-        candidato1_nombre: '', candidato1_partido: '', candidato1_votos: 0, candidato1_pct: 0,
-        candidato2_nombre: '', candidato2_partido: '', candidato2_votos: 0, candidato2_pct: 0,
-        votos_nulos: 0, votos_nulos_pct: 0, votos_blancos: 0, votos_blancos_pct: 0
-      };
+  // Si no se encontró ningún JSON por líneas, intentar parsear todo el cuerpo completo
+  if (jsonObjects.length === 0) {
+    try {
+      const parsed = JSON.parse(bodyText.trim());
+      jsonObjects.push(parsed);
+    } catch (e) {
+      // No es JSON, proceder como texto plano
     }
-    // Si es el JSON de Participantes (Candidatos)
-    if (Array.isArray(jsonData.data)) {
-      const candidates = jsonData.data;
-      if (candidates.length >= 2) {
-        const isAKeiko = candidates[0].nombreCandidato.toUpperCase().includes('FUJIMORI') || candidates[0].nombreAgrupacionPolitica.toUpperCase().includes('FUERZA');
-        const keiko = isAKeiko ? candidates[0] : candidates[1];
-        const roberto = isAKeiko ? candidates[1] : candidates[0];
+  }
 
-        return {
-          type: 'participantes',
-          candidato1_nombre: keiko.nombreCandidato.trim(),
-          candidato1_partido: keiko.nombreAgrupacionPolitica.trim(),
-          candidato1_votos: keiko.totalVotosValidos,
-          candidato1_pct: keiko.porcentajeVotosValidos,
-          candidato2_nombre: roberto.nombreCandidato.trim(),
-          candidato2_partido: roberto.nombreAgrupacionPolitica.trim(),
-          candidato2_votos: roberto.totalVotosValidos,
-          candidato2_pct: roberto.porcentajeVotosValidos,
-          timestamp_onpe: '',
-          actas_contabilizadas: 0,
-          actas_contabilizadas_pct: 0,
-          actas_procesadas: 0,
-          actas_procesadas_pct: 0,
-          votos_nulos: 0, votos_nulos_pct: 0, votos_blancos: 0, votos_blancos_pct: 0
-        };
+  if (jsonObjects.length > 0) {
+    let combinedData = {
+      type: 'json_combined',
+      timestamp_onpe: '',
+      actas_contabilizadas: 0,
+      actas_contabilizadas_pct: 0,
+      actas_procesadas: 0,
+      actas_procesadas_pct: 0,
+      candidato1_nombre: '', candidato1_partido: '', candidato1_votos: 0, candidato1_pct: 0,
+      candidato2_nombre: '', candidato2_partido: '', candidato2_votos: 0, candidato2_pct: 0,
+      votos_nulos: 0, votos_nulos_pct: 0, votos_blancos: 0, votos_blancos_pct: 0
+    };
+
+    let hasTotales = false;
+    let hasParticipantes = false;
+
+    for (const obj of jsonObjects) {
+      // 1. Si es el JSON de Totales
+      if (obj.data && typeof obj.data.actasContabilizadas !== 'undefined') {
+        const d = obj.data;
+        const date = new Date(d.fechaActualizacion);
+        // Formatear la fecha
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        let hours = date.getHours();
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // el cero se convierte en 12
+        const formattedHours = String(hours).padStart(2, '0');
+        
+        combinedData.timestamp_onpe = `${day}/${month}/${year} A LAS ${formattedHours}:${minutes}:${seconds} ${ampm}`;
+        combinedData.actas_contabilizadas = d.contabilizadas;
+        combinedData.actas_contabilizadas_pct = d.actasContabilizadas;
+        
+        const total = d.totalActas || 92766;
+        combinedData.actas_procesadas = d.contabilizadas + (d.enviadasJee || 0);
+        combinedData.actas_procesadas_pct = parseFloat(((combinedData.actas_procesadas / total) * 100).toFixed(3));
+        
+        hasTotales = true;
+      }
+      
+      // 2. Si es el JSON de Participantes (Candidatos)
+      if (Array.isArray(obj.data)) {
+        const candidates = obj.data;
+        if (candidates.length >= 2) {
+          const isAKeiko = candidates[0].nombreCandidato.toUpperCase().includes('FUJIMORI') || candidates[0].nombreAgrupacionPolitica.toUpperCase().includes('FUERZA');
+          const keiko = isAKeiko ? candidates[0] : candidates[1];
+          const roberto = isAKeiko ? candidates[1] : candidates[0];
+
+          combinedData.candidato1_nombre = keiko.nombreCandidato.trim();
+          combinedData.candidato1_partido = keiko.nombreAgrupacionPolitica.trim();
+          combinedData.candidato1_votos = keiko.totalVotosValidos;
+          combinedData.candidato1_pct = keiko.porcentajeVotosValidos;
+          
+          combinedData.candidato2_nombre = roberto.nombreCandidato.trim();
+          combinedData.candidato2_partido = roberto.nombreAgrupacionPolitica.trim();
+          combinedData.candidato2_votos = roberto.totalVotosValidos;
+          combinedData.candidato2_pct = roberto.porcentajeVotosValidos;
+          
+          hasParticipantes = true;
+        }
       }
     }
+
+    if (hasTotales || hasParticipantes) {
+      if (hasTotales && hasParticipantes) {
+        combinedData.type = 'completo';
+      } else if (hasTotales) {
+        combinedData.type = 'totales';
+      } else {
+        combinedData.type = 'participantes';
+      }
+      return combinedData;
+    }
+    
     throw new Error('El JSON provisto no corresponde a un formato reconocido de la ONPE (Totales o Participantes).');
   }
 
