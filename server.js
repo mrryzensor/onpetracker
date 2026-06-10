@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -101,7 +102,7 @@ async function processAndSaveData(scrapedData) {
     console.log(`Nuevo registro guardado con ID: ${id}`);
 
     // Auto-push to remote server if we are running locally and have a remote URL configured
-    const remoteUrl = process.env.API_URL;
+    const remoteUrl = process.env.API_URL || 'https://onpe.installwin.online';
     const remoteToken = process.env.API_TOKEN || 'onpe_secret_token_123';
     
     // Check if remoteUrl is configured, is not pointing to the local instance itself, and this is a local runner
@@ -271,19 +272,108 @@ app.get('/api/history', async (req, res) => {
   }
 });
 
+// Función para sincronizar de inicio todo el historial local que falte en la nube
+async function syncLocalHistoryToRemote() {
+  const remoteUrl = process.env.API_URL || 'https://onpe.installwin.online';
+  const remoteToken = process.env.API_TOKEN || 'onpe_secret_token_123';
+  
+  if (DISABLE_LOCAL_SCRAPER) {
+    console.log('[Startup-Sync] Scraper local desactivado. Saltando sincronización de historial a la nube.');
+    return;
+  }
+  
+  if (!remoteUrl || remoteUrl.includes('localhost') || remoteUrl.includes('127.0.0.1')) {
+    console.log('[Startup-Sync] URL remota no configurada o apunta a localhost. Saltando sincronización.');
+    return;
+  }
+  
+  console.log(`[Startup-Sync] Iniciando sincronización de historial local hacia: ${remoteUrl}`);
+  try {
+    // 1. Obtener historial remoto
+    const remoteRes = await fetch(`${remoteUrl}/api/history`);
+    if (!remoteRes.ok) {
+      console.error(`[Startup-Sync] Error al obtener historial remoto: Código ${remoteRes.status}`);
+      return;
+    }
+    const remoteHistory = await remoteRes.json();
+    const remoteTimestamps = new Set(remoteHistory.map(r => r.onpe_timestamp).filter(Boolean));
+    console.log(`[Startup-Sync] Servidor remoto tiene ${remoteHistory.length} registros.`);
+    
+    // 2. Obtener historial local
+    const localRows = await db.getHistory();
+    console.log(`[Startup-Sync] Base de datos local tiene ${localRows.length} registros.`);
+    
+    // 3. Filtrar registros que faltan en el remoto
+    const missingRows = localRows.filter(row => !remoteTimestamps.has(row.onpe_timestamp));
+    console.log(`[Startup-Sync] Se encontraron ${missingRows.length} registros locales que faltan en la nube.`);
+    
+    if (missingRows.length === 0) {
+      console.log('[Startup-Sync] ¡Sincronización completa! Todos los registros ya están en la nube.');
+      return;
+    }
+    
+    // 4. Subir registros uno por uno
+    for (let i = 0; i < missingRows.length; i++) {
+      const row = missingRows[i];
+      const dataToPush = {
+        timestamp: row.timestamp,
+        timestamp_onpe: row.onpe_timestamp || row.timestamp,
+        actas_contabilizadas: row.actas_contabilizadas,
+        actas_contabilizadas_pct: row.actas_contabilizadas_pct,
+        actas_procesadas: row.actas_procesadas,
+        actas_procesadas_pct: row.actas_procesadas_pct,
+        candidato1_nombre: row.candidato1_nombre,
+        candidato1_partido: row.candidato1_partido || 'FUERZA POPULAR',
+        candidato1_votos: row.candidato1_votos,
+        candidato1_pct: row.candidato1_pct,
+        candidato2_nombre: row.candidato2_nombre,
+        candidato2_partido: row.candidato2_partido || 'JUNTOS POR EL PERÚ',
+        candidato2_votos: row.candidato2_votos,
+        candidato2_pct: row.candidato2_pct,
+        votos_nulos: row.votos_nulos || 0,
+        votos_nulos_pct: row.votos_nulos_pct || 0,
+        votos_blancos: row.votos_blancos || 0,
+        votos_blancos_pct: row.votos_blancos_pct || 0
+      };
+      
+      console.log(`[Startup-Sync] [${i + 1}/${missingRows.length}] Subiendo registro local del ${row.timestamp}...`);
+      const pushRes = await fetch(`${remoteUrl}/api/push`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${remoteToken}`
+        },
+        body: JSON.stringify(dataToPush)
+      });
+      
+      if (!pushRes.ok) {
+        const errText = await pushRes.text();
+        console.error(`[Startup-Sync] Error al subir registro: ${pushRes.status} - ${errText}`);
+        throw new Error('Sincronización abortada por error en el envío.');
+      }
+    }
+    console.log('[Startup-Sync] Sincronización de inicio completada con éxito.');
+  } catch (error) {
+    console.error('[Startup-Sync] Error en el proceso de sincronización inicial:', error.message);
+  }
+}
+
 // Iniciar servidor
 db.initDatabase()
   .then(() => {
-    app.listen(PORT, () => {
+    app.listen(PORT, async () => {
       console.log(`=======================================================`);
       console.log(`Servidor ONPE Tracker ejecutándose en http://localhost:${PORT}`);
       console.log(`=======================================================`);
       
-      // Realizar sincronización inicial al levantar el servidor (si está activado)
+      // Realizar sincronización de historial local al servidor remoto en inicio
       if (!DISABLE_LOCAL_SCRAPER) {
+        await syncLocalHistoryToRemote();
+        
+        // Realizar sincronización inicial del scraper al levantar el servidor
         performSync()
-          .then(res => console.log('Sincronización inicial completada:', res))
-          .catch(err => console.error('Error en sincronización inicial:', err));
+          .then(res => console.log('Sincronización inicial del scraper completada:', res))
+          .catch(err => console.error('Error en sincronización inicial del scraper:', err));
       }
     });
   })
