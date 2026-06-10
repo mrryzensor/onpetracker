@@ -761,6 +761,33 @@ async function loadLatest() {
       netPendingDiff
     };
 
+    // Actualizar sección del desglose de ámbitos (Extranjero y Perú Pendientes)
+    const totalExtValidVotes = estTotalValidVotes * weightExt;
+    const scrutinizedExt = totalExtValidVotes * (pctProgressExt / 100);
+    const extK_current = scrutinizedExt * extPcts.pK;
+    const extR_current = scrutinizedExt * extPcts.pR;
+    
+    const remPeru = Math.max(0, remainingVotes - remExt);
+    const pendingPeruK = Math.max(0, totPendingK - extK);
+    const pendingPeruR = Math.max(0, totPendingR - extR);
+    const pctPendingPeruK = (pendingPeruK / (pendingPeruK + pendingPeruR || 1)) * 100;
+    const pctPendingPeruR = 100 - pctPendingPeruK;
+
+    const extBadgeEl = document.getElementById('ext-progress-badge');
+    const extVotesKEl = document.getElementById('ext-votes-k');
+    const extVotesREl = document.getElementById('ext-votes-r');
+    const peruBadgeEl = document.getElementById('peru-pending-progress-badge');
+    const peruVotesKEl = document.getElementById('peru-pending-votes-k');
+    const peruVotesREl = document.getElementById('peru-pending-votes-r');
+
+    if (extBadgeEl) extBadgeEl.innerText = `${pctProgressExt.toFixed(1)}% escrutado`;
+    if (extVotesKEl) extVotesKEl.innerText = `${formatNumber(Math.round(extK_current))} votos (${(extPcts.pK * 100).toFixed(2)}%)`;
+    if (extVotesREl) extVotesREl.innerText = `${formatNumber(Math.round(extR_current))} votos (${(extPcts.pR * 100).toFixed(2)}%)`;
+
+    if (peruBadgeEl) peruBadgeEl.innerText = `${formatNumber(remPeru)} votos restantes`;
+    if (peruVotesKEl) peruVotesKEl.innerText = `${formatNumber(pendingPeruK)} votos (${pctPendingPeruK.toFixed(2)}%)`;
+    if (peruVotesREl) peruVotesREl.innerText = `${formatNumber(pendingPeruR)} votos (${pctPendingPeruR.toFixed(2)}%)`;
+
     // Asignar al DOM - Bloque 1: ¿Qué falta contar?
     document.getElementById('reg-pending-votes-val').innerText = formatNumber(remainingVotes);
     const pctRemainingTotal = estTotalValidVotes > 0 ? (remainingVotes / estTotalValidVotes * 100) : 0;

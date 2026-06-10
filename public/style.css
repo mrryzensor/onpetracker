@@ -1851,6 +1851,105 @@ body.light-theme .regional-section-box .section-title {
   transform: none;
 }
 
+/* Ambitos Breakdown styles */
+.ambitos-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 600px) {
+  .ambitos-breakdown {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+}
+
+.ambito-box {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.ambito-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 0.5rem;
+}
+
+.ambito-title {
+  font-family: var(--font-title);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ambito-badge {
+  font-size: 0.75rem;
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--accent-blue);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.ambito-candidates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ambito-cand-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.ambito-cand-row .cand-name {
+  font-weight: 600;
+}
+
+.ambito-cand-row .cand-name.k-text {
+  color: var(--color-c1);
+}
+
+.ambito-cand-row .cand-name.r-text {
+  color: var(--color-c2);
+}
+
+.ambito-cand-row .cand-val {
+  color: #fff;
+  font-family: var(--font-title);
+  font-weight: 700;
+}
+
+/* Light theme overrides */
+body.light-theme .ambito-box {
+  background: #f8fafc;
+}
+
+body.light-theme .ambito-title {
+  color: #0f2b5c;
+}
+
+body.light-theme .ambito-cand-row .cand-val {
+  color: #0f2b5c;
+}
+
+body.light-theme .ambito-header {
+  border-bottom: 1px solid #e2e8f0;
+}
+
 
 
 
