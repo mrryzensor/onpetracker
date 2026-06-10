@@ -91,6 +91,7 @@ function formatNumber(num) {
 
 // Inicializar y cargar datos
 document.addEventListener('DOMContentLoaded', () => {
+  setupThemeToggle();
   loadLatest();
   loadHistory();
   setupSyncButton();
@@ -446,6 +447,9 @@ async function loadLatest() {
     const labelC1 = c1Name ? c1Name.split(' ')[0] : 'Keiko';
     const labelC2 = c2Name ? c2Name.split(' ')[0] : 'Roberto';
     
+    const themeCols = getChartThemeColors();
+    const isLight = isLightTheme();
+
     if (window.victoryChartInstance) {
       window.victoryChartInstance.destroy();
     }
@@ -457,10 +461,10 @@ async function loadLatest() {
         const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
         ctx.save();
         const xPixel = x.getPixelForValue(50);
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = isLight ? '#0f2b5c' : '#ffffff';
         ctx.lineWidth = 2.5;
         ctx.setLineDash([4, 4]);
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+        ctx.shadowColor = isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.7)';
         ctx.shadowBlur = 4;
         ctx.beginPath();
         ctx.moveTo(xPixel, top);
@@ -468,7 +472,7 @@ async function loadLatest() {
         ctx.stroke();
         ctx.setLineDash([]);
         
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = isLight ? '#0f2b5c' : '#ffffff';
         ctx.font = 'bold 10px Poppins';
         ctx.textAlign = 'center';
         ctx.shadowBlur = 2;
@@ -512,11 +516,11 @@ async function loadLatest() {
             min: 0,
             max: 100,
             grid: {
-              color: 'rgba(255, 255, 255, 0.05)',
-              borderColor: 'rgba(255, 255, 255, 0.1)'
+              color: themeCols.gridColor,
+              borderColor: themeCols.borderColor
             },
             ticks: {
-              color: '#8b949e',
+              color: themeCols.textColor,
               font: {
                 family: 'Poppins',
                 size: 10
@@ -536,7 +540,7 @@ async function loadLatest() {
             display: true,
             position: 'bottom',
             labels: {
-              color: '#fff',
+              color: themeCols.legendColor,
               boxWidth: 10,
               padding: 10,
               font: {
@@ -833,6 +837,7 @@ async function loadHistory() {
     const res = await fetch('/api/history');
     const history = await res.json();
     
+    window.lastHistoryData = history;
     if (history.length === 0) return;
     
     // Rellenar tabla
@@ -921,6 +926,7 @@ async function loadHistory() {
 // Renderizar gráfico interactivo de la diferencia de votos
 function renderChart(history) {
   const ctx = document.getElementById('historyChart').getContext('2d');
+  const themeCols = getChartThemeColors();
   
   // Etiquetas del eje X (timestamps de registro local formateados)
   const labels = history.map(row => {
@@ -974,11 +980,11 @@ function renderChart(history) {
       scales: {
         x: {
           grid: {
-            color: 'rgba(255, 255, 255, 0.05)',
-            borderColor: 'rgba(255, 255, 255, 0.1)'
+            color: themeCols.gridColor,
+            borderColor: themeCols.borderColor
           },
           ticks: {
-            color: '#8b949e',
+            color: themeCols.textColor,
             font: {
               family: 'Poppins',
               size: 12
@@ -987,11 +993,11 @@ function renderChart(history) {
         },
         y: {
           grid: {
-            color: 'rgba(255, 255, 255, 0.05)',
-            borderColor: 'rgba(255, 255, 255, 0.1)'
+            color: themeCols.gridColor,
+            borderColor: themeCols.borderColor
           },
           ticks: {
-            color: '#8b949e',
+            color: themeCols.textColor,
             font: {
               family: 'Poppins',
               size: 12
@@ -1186,6 +1192,7 @@ function updateProjection(history) {
 
 function renderProjectionChart(history, m, c, currentPct) {
   const ctx = document.getElementById('projectionChart').getContext('2d');
+  const themeCols = getChartThemeColors();
   
   // Calcular regresión para Keiko (Candidato 1)
   const uniquePoints = [];
@@ -1612,7 +1619,7 @@ function renderProjectionChart(history, m, c, currentPct) {
         legend: {
           display: true,
           labels: {
-            color: '#8b949e',
+            color: themeCols.textColor,
             font: { family: 'Poppins', size: 11 }
           }
         },
@@ -1627,11 +1634,11 @@ function renderProjectionChart(history, m, c, currentPct) {
           min: 93.5,
           max: 100,
           grid: {
-            color: 'rgba(255, 255, 255, 0.05)',
-            borderColor: 'rgba(255, 255, 255, 0.1)'
+            color: themeCols.gridColor,
+            borderColor: themeCols.borderColor
           },
           ticks: {
-            color: '#8b949e',
+            color: themeCols.textColor,
             font: { family: 'Poppins', size: 12 },
             callback: function(value) {
               return `${value}%`;
@@ -1640,7 +1647,7 @@ function renderProjectionChart(history, m, c, currentPct) {
           title: {
             display: true,
             text: '% de Actas Contabilizadas',
-            color: '#8b949e',
+            color: themeCols.textColor,
             font: { family: 'Poppins', size: 13 }
           }
         },
@@ -1648,11 +1655,11 @@ function renderProjectionChart(history, m, c, currentPct) {
           min: 45,
           max: 55,
           grid: {
-            color: 'rgba(255, 255, 255, 0.05)',
-            borderColor: 'rgba(255, 255, 255, 0.1)'
+            color: themeCols.gridColor,
+            borderColor: themeCols.borderColor
           },
           ticks: {
-            color: '#8b949e',
+            color: themeCols.textColor,
             font: { family: 'Poppins', size: 12 },
             callback: function(value) {
               return `${value}%`;
@@ -1661,7 +1668,7 @@ function renderProjectionChart(history, m, c, currentPct) {
           title: {
             display: true,
             text: '% de Votos Válidos',
-            color: '#8b949e',
+            color: themeCols.textColor,
             font: { family: 'Poppins', size: 13 }
           }
         }
@@ -1744,6 +1751,55 @@ function setupManualPaste() {
     } finally {
       btnProcess.disabled = false;
       btnProcess.innerHTML = '<i class="fa-solid fa-bolt"></i> Procesar Reporte';
+    }
+  });
+}
+
+// Helper to check if light theme is active
+function isLightTheme() {
+  return document.body.classList.contains('light-theme');
+}
+
+// Helper to get theme-dependent colors for Chart.js
+function getChartThemeColors() {
+  const light = isLightTheme();
+  return {
+    gridColor: light ? 'rgba(15, 43, 92, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+    borderColor: light ? 'rgba(15, 43, 92, 0.15)' : 'rgba(255, 255, 255, 0.1)',
+    textColor: light ? '#0f2b5c' : '#8b949e',
+    legendColor: light ? '#0f2b5c' : '#fff'
+  };
+}
+
+// Setup Theme Toggle Button
+function setupThemeToggle() {
+  const btn = document.getElementById('btn-theme-toggle');
+  if (!btn) return;
+  
+  // Load saved theme
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-theme');
+    btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+  } else {
+    document.body.classList.remove('light-theme');
+    btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+  }
+  
+  btn.addEventListener('click', () => {
+    const isLight = document.body.classList.toggle('light-theme');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    
+    if (isLight) {
+      btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+    } else {
+      btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+    }
+    
+    // Redraw charts if we have cached history data
+    if (window.lastHistoryData) {
+      renderChart(window.lastHistoryData);
+      updateProjection(window.lastHistoryData);
     }
   });
 }
