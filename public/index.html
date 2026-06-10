@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,9 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- FontAwesome for icons -->
@@ -16,23 +19,28 @@
   <link rel="shortcut icon" href="LogoOnpeTrackerFondoBlanco.jpg" type="image/jpeg">
   <!-- Meta tags for social networks (OpenGraph / Facebook / WhatsApp) -->
   <meta property="og:title" content="ONPE Tracker - Diferencia de Votos en Tiempo Real">
-  <meta property="og:description" content="Monitoreo y registro histórico de la segunda vuelta presidencial. Proyecciones al 100% de actas y análisis de irreversibilidad matemática.">
+  <meta property="og:description"
+    content="Monitoreo y registro histórico de la segunda vuelta presidencial. Proyecciones al 100% de actas y análisis de irreversibilidad matemática.">
   <meta property="og:image" content="LogoOnpeTrackerFondoBlanco.jpg">
   <meta property="og:type" content="website">
   <!-- Meta tags for Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="ONPE Tracker - Diferencia de Votos en Tiempo Real">
-  <meta name="twitter:description" content="Monitoreo y registro histórico de la segunda vuelta presidencial. Proyecciones al 100% de actas y análisis de irreversibilidad matemática.">
+  <meta name="twitter:description"
+    content="Monitoreo y registro histórico de la segunda vuelta presidencial. Proyecciones al 100% de actas y análisis de irreversibilidad matemática.">
   <meta name="twitter:image" content="LogoOnpeTrackerFondoBlanco.jpg">
 </head>
-<body>
+
+<body class="light-theme">
   <div class="app-container">
     <!-- Header -->
     <header class="header">
       <div class="logo-area">
-        <img src="LogoOnpeTrackerFondoBlanco.jpg" style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover; border: 1.5px solid var(--border-color); background: #fff;" alt="Logo">
+        <img src="LogoOnpeTrackerFondoBlanco.jpg"
+          style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover; border: 1.5px solid var(--border-color); background: #fff;"
+          alt="Logo">
         <div>
-          <h1>ONPE Tracker <span>Local</span></h1>
+          <h1>ONPE Tracker</h1>
           <p class="subtitle">Monitoreo y registro histórico de la segunda vuelta</p>
         </div>
       </div>
@@ -59,7 +67,7 @@
 
     <!-- Main Grid Layout -->
     <main class="main-grid">
-      
+
       <!-- Actas Card -->
       <section class="card actas-card full-width">
         <div class="card-header">
@@ -85,11 +93,13 @@
           <div class="actas-details">
             <div class="detail-item">
               <span class="color-dot jec"></span>
-              <span>Para Envío JEE: <strong id="actas-jee-val">-</strong> (<span id="actas-jee-pct-val">- %</span>)</span>
+              <span>Para Envío JEE: <strong id="actas-jee-val">-</strong> (<span id="actas-jee-pct-val">-
+                  %</span>)</span>
             </div>
             <div class="detail-item">
               <span class="color-dot pendientes"></span>
-              <span>Pendientes de Resolver: <strong id="actas-pendientes-val">-</strong> (<span id="actas-pendientes-pct-val">- %</span>)</span>
+              <span>Pendientes de Resolver: <strong id="actas-pendientes-val">-</strong> (<span
+                  id="actas-pendientes-pct-val">- %</span>)</span>
             </div>
           </div>
         </div>
@@ -104,7 +114,9 @@
         <div class="victory-grid">
           <div class="victory-metric-box" style="display:flex; align-items:center; gap:12px;">
             <div id="victory-leader-face-container" style="display:none; align-items:center; justify-content:center;">
-              <img id="victory-leader-face" src="" style="width:40px; height:50px; object-fit:contain; border-radius:6px; border:1.5px solid rgba(255,255,255,0.2); background:#fff;" alt="Líder">
+              <img id="victory-leader-face" src=""
+                style="width:40px; height:50px; object-fit:contain; border-radius:6px; border:1.5px solid rgba(255,255,255,0.2); background:#fff;"
+                alt="Líder">
             </div>
             <div style="display:flex; flex-direction:column;">
               <span class="victory-label">Diferencia de Votos Actual</span>
@@ -197,7 +209,7 @@
         <div class="card-header">
           <h2><i class="fa-solid fa-chart-line"></i> Proyección Estadística de Tendencia</h2>
         </div>
-        
+
         <div class="projection-grid">
           <div class="projection-metric">
             <span class="victory-label">Hora Estimada de Cruce/Empate</span>
@@ -205,8 +217,11 @@
             <span class="hint-text" id="proj-tie-pct">al - % de actas</span>
           </div>
           <div class="projection-metric" style="display:flex; align-items:center; gap:12px;">
-            <div id="projection-leader-face-container" style="display:none; align-items:center; justify-content:center;">
-              <img id="projection-leader-face" src="" style="width:40px; height:50px; object-fit:contain; border-radius:6px; border:1.5px solid rgba(255,255,255,0.2); background:#fff;" alt="Líder Proyectado">
+            <div id="projection-leader-face-container"
+              style="display:none; align-items:center; justify-content:center;">
+              <img id="projection-leader-face" src=""
+                style="width:40px; height:50px; object-fit:contain; border-radius:6px; border:1.5px solid rgba(255,255,255,0.2); background:#fff;"
+                alt="Líder Proyectado">
             </div>
             <div style="display:flex; flex-direction:column;">
               <span class="victory-label">Resultado Final Proyectado (100%)</span>
@@ -237,9 +252,10 @@
             <div class="section-title">¿Qué falta contar?</div>
             <div class="pending-overview">
               <span class="pending-total-val" id="reg-pending-votes-val">-</span>
-              <span class="pending-total-label">votos aproximados por escrutar (<strong id="reg-pending-pct-val">-%</strong> del padrón)</span>
+              <span class="pending-total-label">votos aproximados por escrutar (<strong
+                  id="reg-pending-pct-val">-%</strong> del padrón)</span>
             </div>
-            
+
             <div class="regional-distribution-list">
               <div class="regional-dist-item">
                 <div class="dist-icon"><i class="fa-solid fa-plane"></i></div>
@@ -271,11 +287,13 @@
             <div class="impact-split-container">
               <!-- Keiko (Naranja) -->
               <div class="impact-column">
-                <div class="column-header-cand c1-title" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:0.4rem 0.5rem;">
-                  <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" style="width:34px; height:34px; border-radius:50%; border:1px solid #fff;" alt="Keiko">
+                <div class="column-header-cand c1-title"
+                  style="display:flex; align-items:center; justify-content:center; gap:8px; padding:0.4rem 0.5rem;">
+                  <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png"
+                    style="width:34px; height:34px; border-radius:50%; border:1px solid #fff;" alt="Keiko">
                   FUERZA POPULAR
                 </div>
-                
+
                 <div class="impact-bar-item">
                   <div class="impact-bar-label">
                     <span>Voto Extranjero</span>
@@ -312,8 +330,10 @@
 
               <!-- Roberto (Teal) -->
               <div class="impact-column">
-                <div class="column-header-cand c2-title" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:0.4rem 0.5rem;">
-                  <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" style="width:34px; height:34px; border-radius:50%; border:1px solid #fff;" alt="Roberto">
+                <div class="column-header-cand c2-title"
+                  style="display:flex; align-items:center; justify-content:center; gap:8px; padding:0.4rem 0.5rem;">
+                  <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png"
+                    style="width:34px; height:34px; border-radius:50%; border:1px solid #fff;" alt="Roberto">
                   JUNTOS POR EL PERÚ
                 </div>
 
@@ -356,7 +376,7 @@
           <!-- Bloque 3: Balance Proyectado al 100% -->
           <div class="regional-section-box">
             <div class="section-title">Proyección al 100% de Actas</div>
-            
+
             <div class="balance-card">
               <div class="balance-line">
                 <span>Sumatoria Keiko:</span>
@@ -379,7 +399,9 @@
               <div class="proj-final-grid">
                 <div class="proj-final-metric" style="display:flex; flex-direction:column; align-items:center;">
                   <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-                    <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" style="width:30px; height:30px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);" alt="Keiko">
+                    <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png"
+                      style="width:30px; height:30px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);"
+                      alt="Keiko">
                     <span class="proj-name">Keiko Fujimori</span>
                   </div>
                   <span class="proj-votes" id="reg-final-votes-k">- votos</span>
@@ -387,7 +409,9 @@
                 </div>
                 <div class="proj-final-metric" style="display:flex; flex-direction:column; align-items:center;">
                   <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-                    <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" style="width:30px; height:30px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);" alt="Roberto">
+                    <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png"
+                      style="width:30px; height:30px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);"
+                      alt="Roberto">
                     <span class="proj-name">Roberto Sánchez</span>
                   </div>
                   <span class="proj-votes" id="reg-final-votes-r">- votos</span>
@@ -413,7 +437,8 @@
         <!-- Lima Distritos Trigger -->
         <div class="lima-breakdown-trigger-area">
           <button id="btn-toggle-lima-breakdown" class="btn">
-            <i class="fa-solid fa-magnifying-glass-location"></i> Ver Desglose de Actas JEE de Lima Provincias y Distritos
+            <i class="fa-solid fa-magnifying-glass-location"></i> Ver Desglose de Actas JEE de Lima Provincias y
+            Distritos
           </button>
         </div>
 
@@ -446,7 +471,10 @@
           <div class="regional-methodology-note">
             <i class="fa-solid fa-circle-info"></i>
             <div>
-              <strong>Metodología de Estimación:</strong> La distribución de votos de actas enviadas al JEE de Lima se calcula ponderando el peso electoral de cada provincia y distrito según el padrón real. Los porcentajes de votación se ajustan dinámicamente aplicando la desviación observada en la tendencia nacional actual respecto al histórico. Miraflores, San Isidro, Surco, San Borja y La Molina se agrupan en "Residenciales".
+              <strong>Metodología de Estimación:</strong> La distribución de votos de actas enviadas al JEE de Lima se
+              calcula ponderando el peso electoral de cada provincia y distrito según el padrón real. Los porcentajes de
+              votación se ajustan dinámicamente aplicando la desviación observada en la tendencia nacional actual
+              respecto al histórico. Miraflores, San Isidro, Surco, San Borja y La Molina se agrupan en "Residenciales".
             </div>
           </div>
         </div>
@@ -498,19 +526,25 @@
         <button id="btn-close-modal" class="btn-close">&times;</button>
       </div>
       <div class="modal-body">
-        <p>Dado que la ONPE limita el copiado de texto plano, puedes abrir los siguientes enlaces oficiales directo en tu navegador (se abrirán en pestañas nuevas), copiar el texto JSON completo y pegarlo en el cuadro de abajo:</p>
-        
+        <p>Dado que la ONPE limita el copiado de texto plano, puedes abrir los siguientes enlaces oficiales directo en
+          tu navegador (se abrirán en pestañas nuevas), copiar el texto JSON completo y pegarlo en el cuadro de abajo:
+        </p>
+
         <div class="direct-links-grid">
-          <a href="https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general/totales?idEleccion=10&tipoFiltro=eleccion" target="_blank" class="btn btn-direct-link">
+          <a href="https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general/totales?idEleccion=10&tipoFiltro=eleccion"
+            target="_blank" class="btn btn-direct-link">
             <i class="fa-solid fa-file-invoice"></i> 1. Ver JSON de Actas (Totales)
           </a>
-          <a href="https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general/participantes?idEleccion=10&tipoFiltro=eleccion" target="_blank" class="btn btn-direct-link">
+          <a href="https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general/participantes?idEleccion=10&tipoFiltro=eleccion"
+            target="_blank" class="btn btn-direct-link">
             <i class="fa-solid fa-users"></i> 2. Ver JSON de Votos (Candidatos)
           </a>
         </div>
 
-        <textarea id="paste-textarea" placeholder="Pega el contenido JSON de cualquiera de los dos enlaces de arriba o el reporte de texto aquí..." rows="10"></textarea>
-        
+        <textarea id="paste-textarea"
+          placeholder="Pega el contenido JSON de cualquiera de los dos enlaces de arriba o el reporte de texto aquí..."
+          rows="10"></textarea>
+
         <div class="modal-actions">
           <button id="btn-process-paste" class="btn btn-primary">
             <i class="fa-solid fa-bolt"></i> Procesar Reporte/JSON
@@ -522,4 +556,5 @@
 
   <script src="app.js"></script>
 </body>
+
 </html>

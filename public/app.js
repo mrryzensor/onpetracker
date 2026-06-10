@@ -1800,14 +1800,14 @@ function setupThemeToggle() {
   const btn = document.getElementById('btn-theme-toggle');
   if (!btn) return;
   
-  // Load saved theme
+  // Load saved theme (default to light if not set)
   const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'light') {
-    document.body.classList.add('light-theme');
-    btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
-  } else {
+  if (savedTheme === 'dark') {
     document.body.classList.remove('light-theme');
     btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+  } else {
+    document.body.classList.add('light-theme');
+    btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
   }
   
   btn.addEventListener('click', () => {
