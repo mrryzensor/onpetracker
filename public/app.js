@@ -71,7 +71,17 @@ function getCustomHtmlTooltip(context) {
 
   const position = context.chart.canvas.getBoundingClientRect();
   tooltipEl.style.opacity = 1;
-  tooltipEl.style.left = window.pageXOffset + position.left + tooltipModel.caretX + 'px';
+  
+  const tooltipWidth = tooltipEl.offsetWidth || 180;
+  let leftPos = window.pageXOffset + position.left + tooltipModel.caretX;
+  
+  // Si la burbuja se sale por el lado derecho de la pantalla, moverla a la izquierda del cursor
+  if (leftPos + tooltipWidth > window.innerWidth - 20) {
+    leftPos = window.pageXOffset + position.left + tooltipModel.caretX - tooltipWidth - 20;
+    if (leftPos < 10) leftPos = 10; // Evitar que se desborde por la izquierda
+  }
+  
+  tooltipEl.style.left = leftPos + 'px';
   tooltipEl.style.top = window.pageYOffset + position.top + tooltipModel.caretY - 10 + 'px';
 }
 
