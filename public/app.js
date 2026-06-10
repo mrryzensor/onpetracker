@@ -204,14 +204,23 @@ async function loadLatest() {
     c2PctBadge.innerText = `${rightPct.toFixed(3)} %`;
 
     // Cambiar dinámicamente los bordes de las tarjetas de los candidatos
-    const c1Row = document.getElementById('c1-row');
-    const c2Row = document.getElementById('c2-row');
+    const c1Left = document.querySelector('#c1-row .candidate-left');
+    const c1Right = document.querySelector('#c1-row .candidate-right');
+    const c2Left = document.querySelector('#c2-row .candidate-left');
+    const c2Right = document.querySelector('#c2-row .candidate-right');
+
     if (isC1Leading) {
-      c1Row.style.borderLeftColor = 'var(--color-c1)';
-      c2Row.style.borderRightColor = 'var(--color-c2)';
+      // Keiko (C1) está a la izquierda (Card 1), Roberto (C2) a la derecha (Card 2)
+      if (c1Left) c1Left.style.borderLeftColor = 'var(--color-c1)';
+      if (c1Right) c1Right.style.borderRightColor = 'var(--color-c1)';
+      if (c2Left) c2Left.style.borderLeftColor = 'var(--color-c2)';
+      if (c2Right) c2Right.style.borderRightColor = 'var(--color-c2)';
     } else {
-      c1Row.style.borderLeftColor = 'var(--color-c2)';
-      c2Row.style.borderRightColor = 'var(--color-c1)';
+      // Roberto (C2) está a la izquierda (Card 1), Keiko (C1) a la derecha (Card 2)
+      if (c1Left) c1Left.style.borderLeftColor = 'var(--color-c2)';
+      if (c1Right) c1Right.style.borderRightColor = 'var(--color-c2)';
+      if (c2Left) c2Left.style.borderLeftColor = 'var(--color-c1)';
+      if (c2Right) c2Right.style.borderRightColor = 'var(--color-c1)';
     }
 
     // Calcular la diferencia / Brecha
