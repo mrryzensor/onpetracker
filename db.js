@@ -90,7 +90,7 @@ function insertRecord(data) {
     `;
     
     db.run(query, [
-      new Date().toISOString(),
+      data.timestamp || new Date().toISOString(),
       data.timestamp_onpe,
       data.actas_contabilizadas,
       data.actas_contabilizadas_pct,

@@ -276,17 +276,29 @@ function parseRawText(bodyText) {
       if (obj.data && typeof obj.data.actasContabilizadas !== 'undefined') {
         const d = obj.data;
         const date = new Date(d.fechaActualizacion);
-        // Formatear la fecha
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        let hours = date.getHours();
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
-        const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
-        hours = hours % 12;
-        hours = hours ? hours : 12; // el cero se convierte en 12
-        const formattedHours = String(hours).padStart(2, '0');
+        // Extract all date elements in America/Lima timezone to avoid server UTC offset issues
+        const formatterLima = new Intl.DateTimeFormat('es-PE', {
+          timeZone: 'America/Lima',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: 'numeric',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        
+        const parts = formatterLima.formatToParts(date);
+        const day = parts.find(p => p.type === 'day').value;
+        const month = parts.find(p => p.type === 'month').value;
+        const year = parts.find(p => p.type === 'year').value;
+        const hour24 = parseInt(parts.find(p => p.type === 'hour').value, 10);
+        const minutes = parts.find(p => p.type === 'minute').value;
+        const seconds = parts.find(p => p.type === 'second').value;
+        
+        const hr12 = hour24 % 12 || 12;
+        const formattedHours = String(hr12).padStart(2, '0');
+        const ampm = hour24 >= 12 ? 'p. m.' : 'a. m.';
         
         combinedData.timestamp_onpe = `${day}/${month}/${year} A LAS ${formattedHours}:${minutes}:${seconds} ${ampm}`;
         combinedData.actas_contabilizadas = d.contabilizadas;
