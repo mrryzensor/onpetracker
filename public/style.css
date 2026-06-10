@@ -1644,8 +1644,8 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translate(-50%, 4px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+  from { opacity: 0; margin-bottom: -4px; }
+  to { opacity: 1; margin-bottom: 0; }
 }
 
 /* Light Theme Variables & Overrides */
@@ -1826,8 +1826,17 @@ body.light-theme .regional-section-box .section-title {
 }
 
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translate(-50%, -4px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+  from { opacity: 0; margin-top: -4px; }
+  to { opacity: 1; margin-top: 0; }
+}
+
+/* Align tooltips to the right (extending leftwards into the page) to prevent overflow on the right edge of the table or viewport */
+.history-table td:nth-child(4) .tooltip-content,
+.history-table td:nth-child(5) .tooltip-content,
+.history-table td:nth-child(7) .tooltip-content {
+  left: auto;
+  right: 0;
+  transform: none;
 }
 
 
