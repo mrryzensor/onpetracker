@@ -1,4 +1,79 @@
+// Preload candidate face images for canvas drawing and tooltip display
+const imgKeiko = new Image();
+imgKeiko.src = 'https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png';
+imgKeiko.onload = () => {
+  if (window.projectionChartInstance) window.projectionChartInstance.update();
+};
+const imgRoberto = new Image();
+imgRoberto.src = 'https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png';
+imgRoberto.onload = () => {
+  if (window.projectionChartInstance) window.projectionChartInstance.update();
+};
+
 let chartInstance = null;
+
+// Helper for custom HTML tooltip in Chart.js displaying candidate faces
+function getCustomHtmlTooltip(context) {
+  let tooltipEl = document.getElementById('chartjs-tooltip');
+
+  if (!tooltipEl) {
+    tooltipEl = document.createElement('div');
+    tooltipEl.id = 'chartjs-tooltip';
+    tooltipEl.style.background = '#151824';
+    tooltipEl.style.border = '1px solid #252a3d';
+    tooltipEl.style.borderRadius = '8px';
+    tooltipEl.style.color = '#fff';
+    tooltipEl.style.opacity = 0;
+    tooltipEl.style.pointerEvents = 'none';
+    tooltipEl.style.position = 'absolute';
+    tooltipEl.style.transition = 'all 0.15s ease';
+    tooltipEl.style.padding = '10px';
+    tooltipEl.style.zIndex = '10000';
+    tooltipEl.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
+    document.body.appendChild(tooltipEl);
+  }
+
+  const tooltipModel = context.tooltip;
+  if (tooltipModel.opacity === 0) {
+    tooltipEl.style.opacity = 0;
+    return;
+  }
+
+  if (tooltipModel.body) {
+    const titleLines = tooltipModel.title || [];
+    const bodyLines = tooltipModel.body.map(bodyItem => bodyItem.lines);
+
+    let innerHtml = '<div style="font-family: Poppins; font-size: 13px;">';
+
+    titleLines.forEach(title => {
+      innerHtml += `<div style="font-weight: bold; margin-bottom: 6px; color: #8b949e; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">${title}</div>`;
+    });
+
+    bodyLines.forEach(body => {
+      const text = body[0];
+      let imgHtml = '';
+      
+      const isKeiko = text.toUpperCase().includes('KEIKO') || text.startsWith('K ') || text.includes('(K)') || text.includes('K:') || text.includes('KEIKO:') || text.includes('KEIKO FUJIMORI');
+      const isRoberto = text.toUpperCase().includes('ROBERTO') || text.startsWith('JP ') || text.includes('(R)') || text.includes('R:') || text.includes('JP:') || text.includes('ROBERTO SÁNCHEZ') || text.includes('ROBERTO SANCHEZ');
+      
+      if (isKeiko) {
+        imgHtml = '<img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" style="width: 55px; height: 68px; object-fit: contain; margin-right: 10px; vertical-align: middle; background: #fff; border-radius: 4px; border: 1.5px solid #ff6c00;">';
+      } else if (isRoberto) {
+        imgHtml = '<img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" style="width: 55px; height: 68px; object-fit: contain; margin-right: 10px; vertical-align: middle; background: #fff; border-radius: 4px; border: 1.5px solid #00c2a0;">';
+      }
+
+      innerHtml += `<div style="display: flex; align-items: center; margin-top: 6px;">${imgHtml}<span>${text}</span></div>`;
+    });
+
+    innerHtml += '</div>';
+    tooltipEl.innerHTML = innerHtml;
+  }
+
+  const position = context.chart.canvas.getBoundingClientRect();
+  tooltipEl.style.opacity = 1;
+  tooltipEl.style.left = window.pageXOffset + position.left + tooltipModel.caretX + 'px';
+  tooltipEl.style.top = window.pageYOffset + position.top + tooltipModel.caretY - 10 + 'px';
+}
 
 // Analizar fechas de SQLite y tratarlas como UTC si no tienen indicador de zona
 function parseSQLiteDate(timestampStr) {
@@ -226,6 +301,15 @@ async function loadLatest() {
     // Calcular la diferencia / Brecha
     const diff = data.candidato1_votos - data.candidato2_votos;
     const diffAbs = Math.abs(diff);
+    
+    // Actualizar rostro del líder en el Umbral de Irreversibilidad
+    const leaderFaceContainer = document.getElementById('victory-leader-face-container');
+    const leaderFaceImg = document.getElementById('victory-leader-face');
+    if (leaderFaceContainer && leaderFaceImg) {
+      leaderFaceContainer.style.display = 'flex';
+      leaderFaceImg.src = isC1Leading ? c1Photo : c2Photo;
+      leaderFaceImg.style.borderColor = isC1Leading ? 'var(--color-c1)' : 'var(--color-c2)';
+    }
     
     let leadName = '';
     let leadParty = '';
@@ -462,20 +546,8 @@ async function loadLatest() {
             }
           },
           tooltip: {
-            backgroundColor: '#151824',
-            titleColor: '#8b949e',
-            bodyColor: '#fff',
-            borderColor: '#252a3d',
-            borderWidth: 1,
-            padding: 8,
-            callbacks: {
-              label: function(context) {
-                const label = context.dataset.label;
-                const pct = context.raw;
-                const votes = Math.round(pct / 100 * estTotalValidVotes);
-                return `${label}: ${pct.toFixed(3)}% (${formatNumber(votes)} votos)`;
-              }
-            }
+            enabled: false,
+            external: getCustomHtmlTooltip
           }
         }
       },
@@ -779,9 +851,21 @@ async function loadHistory() {
       
       let winnerBadge = '';
       if (diff > 0) {
-        winnerBadge = `<span class="badge badge-c1">${row.candidato1_nombre ? row.candidato1_nombre.split(' ')[0] : 'Candidato A'}</span>`;
+        winnerBadge = `
+          <span class="badge badge-c1 tooltip-trigger">
+            ${row.candidato1_nombre ? row.candidato1_nombre.split(' ')[0] : 'Keiko'}
+            <span class="tooltip-content">
+              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" style="width: 65px; height: 81px; object-fit: contain; background: #fff; border-radius: 6px; border: 1.5px solid #ff6c00;">
+            </span>
+          </span>`;
       } else if (diff < 0) {
-        winnerBadge = `<span class="badge badge-c2">${row.candidato2_nombre ? row.candidato2_nombre.split(' ')[0] : 'Candidato B'}</span>`;
+        winnerBadge = `
+          <span class="badge badge-c2 tooltip-trigger">
+            ${row.candidato2_nombre ? row.candidato2_nombre.split(' ')[0] : 'Roberto'}
+            <span class="tooltip-content">
+              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" style="width: 65px; height: 81px; object-fit: contain; background: #fff; border-radius: 6px; border: 1.5px solid #00c2a0;">
+            </span>
+          </span>`;
       } else {
         winnerBadge = `<span class="badge">Empate</span>`;
       }
@@ -790,8 +874,18 @@ async function loadHistory() {
         <td>${localTime}</td>
         <td>${onpeTime}</td>
         <td><strong>${row.actas_contabilizadas_pct.toFixed(3)}%</strong> (${formatNumber(row.actas_contabilizadas)})</td>
-        <td style="color: var(--color-c1); font-weight:600;">${row.candidato1_pct.toFixed(3)}% <span style="font-size:0.75rem; color:var(--text-muted)">(${formatNumber(row.candidato1_votos)})</span></td>
-        <td style="color: var(--color-c2); font-weight:600;">${row.candidato2_pct.toFixed(3)}% <span style="font-size:0.75rem; color:var(--text-muted)">(${formatNumber(row.candidato2_votos)})</span></td>
+        <td class="tooltip-trigger" style="color: var(--color-c1); font-weight:600;">
+          ${row.candidato1_pct.toFixed(3)}% <span style="font-size:0.75rem; color:var(--text-muted)">(${formatNumber(row.candidato1_votos)})</span>
+          <span class="tooltip-content">
+            <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" style="width: 65px; height: 81px; object-fit: contain; background: #fff; border-radius: 6px; border: 1.5px solid #ff6c00;">
+          </span>
+        </td>
+        <td class="tooltip-trigger" style="color: var(--color-c2); font-weight:600;">
+          ${row.candidato2_pct.toFixed(3)}% <span style="font-size:0.75rem; color:var(--text-muted)">(${formatNumber(row.candidato2_votos)})</span>
+          <span class="tooltip-content">
+            <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" style="width: 65px; height: 81px; object-fit: contain; background: #fff; border-radius: 6px; border: 1.5px solid #00c2a0;">
+          </span>
+        </td>
         <td><strong>${formatNumber(diffAbs)}</strong></td>
         <td>${winnerBadge}</td>
       `;
@@ -858,34 +952,8 @@ function renderChart(history) {
           display: false // Ocultamos la leyenda para simplificar
         },
         tooltip: {
-          backgroundColor: '#151824',
-          titleColor: '#8b949e',
-          bodyColor: '#fff',
-          borderColor: '#252a3d',
-          borderWidth: 1,
-          padding: 14,
-          displayColors: false,
-          titleFont: {
-            family: 'Poppins',
-            size: 14,
-            weight: 'bold'
-          },
-          bodyFont: {
-            family: 'Poppins',
-            size: 14
-          },
-          callbacks: {
-            label: function(context) {
-              const val = context.parsed.y;
-              if (val > 0) {
-                return `Lidera Keiko por: ${formatNumber(val)} votos`;
-              } else if (val < 0) {
-                return `Lidera Roberto por: ${formatNumber(Math.abs(val))} votos`;
-              } else {
-                return 'Empate absoluto';
-              }
-            }
-          }
+          enabled: false,
+          external: getCustomHtmlTooltip
         }
       },
       scales: {
@@ -1232,19 +1300,37 @@ function renderProjectionChart(history, m, c, currentPct) {
         if (stroke) ctx.stroke();
       }
 
-      // Auxiliar: Dibujar pequeñas etiquetas de porcentaje junto a los puntos
-      function drawTextBadge(ctx, bx, by, text, color, alignLeft = false) {
+      // Auxiliar: Dibujar pequeñas etiquetas de porcentaje junto a los puntos con miniatura del rostro
+      function drawTextBadgeWithFace(ctx, bx, by, text, color, img, alignLeft = false) {
         ctx.font = 'bold 13px Poppins';
-        const w = ctx.measureText(text).width + 16;
-        const h = 24;
+        const textWidth = ctx.measureText(text).width;
+        const imgSize = 20; // Tamaño de la miniatura
+        const padding = 6;
+        const w = textWidth + imgSize + padding * 3;
+        const h = 26;
         let startX = alignLeft ? bx : bx - w / 2;
         // Limitar coordenadas de la etiqueta dentro del área de la gráfica
         startX = Math.max(chart.chartArea.left + 5, Math.min(chart.chartArea.right - w - 5, startX));
+        
         ctx.fillStyle = color;
-        roundRect(ctx, startX, by - h/2, w, h, 4, true, false);
+        roundRect(ctx, startX, by - h/2, w, h, 5, true, false);
+        
+        // Dibujar rostro circular si la imagen está cargada
+        if (img && img.complete && img.naturalWidth !== 0) {
+          ctx.save();
+          ctx.beginPath();
+          const imgX = startX + padding;
+          const imgY = by - imgSize / 2;
+          ctx.arc(imgX + imgSize / 2, imgY + imgSize / 2, imgSize / 2, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(img, imgX, imgY, imgSize, imgSize);
+          ctx.restore();
+        }
+        
         ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center';
-        ctx.fillText(text, startX + w / 2, by + 5.5);
+        ctx.textAlign = 'left';
+        ctx.fillText(text, startX + padding * 2 + imgSize, by + 5.5);
       }
 
       // 1. DIBUJAR LÍNEA VERTICAL Y GLOBO PARA "ACTUAL"
@@ -1378,10 +1464,10 @@ function renderProjectionChart(history, m, c, currentPct) {
         const offsetKActual = isKGreaterActual ? -14 : 14;
         const offsetRActual = isKGreaterActual ? 14 : -14;
         
-        // Keiko actual
-        drawTextBadge(ctx, pixelXK - 45, pixelYK + offsetKActual, `K ${ptK.y.toFixed(3)}%`, '#ea580c');
-        // Roberto actual
-        drawTextBadge(ctx, pixelXR - 45, pixelYR + offsetRActual, `JP ${ptR.y.toFixed(3)}%`, '#0e9f6e');
+        // Keiko actual (arriba/abajo dinámicamente)
+        drawTextBadgeWithFace(ctx, pixelXK - 50, pixelYK + offsetKActual, `K ${ptK.y.toFixed(3)}%`, '#ea580c', imgKeiko);
+        // Roberto actual (arriba/abajo dinámicamente)
+        drawTextBadgeWithFace(ctx, pixelXR - 50, pixelYR + offsetRActual, `JP ${ptR.y.toFixed(3)}%`, '#0e9f6e', imgRoberto);
       }
 
       // 5. DIBUJAR VALORES AL FINAL DE LA PROYECCIÓN (100%)
@@ -1399,9 +1485,9 @@ function renderProjectionChart(history, m, c, currentPct) {
         const offsetRProj = isKGreaterProj ? 14 : -14;
         
         // Keiko final
-        drawTextBadge(ctx, pixelXK - 45, pixelYK + offsetKProj, `${ptK.y.toFixed(2)}%`, '#ea580c');
+        drawTextBadgeWithFace(ctx, pixelXK - 50, pixelYK + offsetKProj, `K ${ptK.y.toFixed(2)}%`, '#ea580c', imgKeiko);
         // Roberto final
-        drawTextBadge(ctx, pixelXR - 45, pixelYR + offsetRProj, `${ptR.y.toFixed(2)}%`, '#0e9f6e');
+        drawTextBadgeWithFace(ctx, pixelXR - 50, pixelYR + offsetRProj, `JP ${ptR.y.toFixed(2)}%`, '#0e9f6e', imgRoberto);
       }
 
       ctx.restore();
@@ -1500,47 +1586,8 @@ function renderProjectionChart(history, m, c, currentPct) {
           }
         },
         tooltip: {
-          backgroundColor: '#151824',
-          titleColor: '#8b949e',
-          bodyColor: '#fff',
-          borderColor: '#252a3d',
-          borderWidth: 1,
-          padding: 14,
-          titleFont: {
-            family: 'Poppins',
-            size: 14,
-            weight: 'bold'
-          },
-          bodyFont: {
-            family: 'Poppins',
-            size: 14
-          },
-          itemSort: function(a, b) {
-            return b.parsed.y - a.parsed.y; // Ordena de mayor a menor porcentaje
-          },
-          filter: function(tooltipItem) {
-            const xVal = tooltipItem.parsed.x;
-            const label = tooltipItem.dataset.label;
-            if (xVal < currentPct) {
-              return label.includes('(Real)');
-            } else {
-              return label.includes('(Proyección)') || label === 'Punto de Quiebre';
-            }
-          },
-          callbacks: {
-            title: function(context) {
-              const xVal = context[0].parsed.x;
-              return `Actas Contabilizadas: ${xVal.toFixed(3)}%`;
-            },
-            label: function(context) {
-              const datasetLabel = context.dataset.label;
-              const yVal = context.parsed.y;
-              if (datasetLabel === 'Punto de Quiebre') {
-                return `Cruce estimado al: ${context.parsed.x.toFixed(3)}% (Ambos: 50.00%)`;
-              }
-              return `${datasetLabel}: ${yVal.toFixed(3)}%`;
-            }
-          }
+          enabled: false,
+          external: getCustomHtmlTooltip
         }
       },
       scales: {

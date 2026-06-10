@@ -99,6 +99,56 @@ async function processAndSaveData(scrapedData) {
   if (hasChanged) {
     id = await db.insertRecord(scrapedData);
     console.log(`Nuevo registro guardado con ID: ${id}`);
+
+    // Auto-push to remote server if we are running locally and have a remote URL configured
+    const remoteUrl = process.env.API_URL;
+    const remoteToken = process.env.API_TOKEN || 'onpe_secret_token_123';
+    
+    // Check if remoteUrl is configured, is not pointing to the local instance itself, and this is a local runner
+    if (remoteUrl && !remoteUrl.includes('localhost') && !remoteUrl.includes('127.0.0.1') && process.env.DISABLE_LOCAL_SCRAPER !== 'true') {
+      console.log(`[Auto-Push] Enviando nuevo registro al servidor remoto (${remoteUrl})...`);
+      
+      const dataToPush = {
+        timestamp: scrapedData.timestamp || new Date().toISOString(),
+        timestamp_onpe: scrapedData.timestamp_onpe,
+        actas_contabilizadas: scrapedData.actas_contabilizadas,
+        actas_contabilizadas_pct: scrapedData.actas_contabilizadas_pct,
+        actas_procesadas: scrapedData.actas_procesadas,
+        actas_procesadas_pct: scrapedData.actas_procesadas_pct,
+        candidato1_nombre: scrapedData.candidato1_nombre,
+        candidato1_partido: scrapedData.candidato1_partido || 'FUERZA POPULAR',
+        candidato1_votos: scrapedData.candidato1_votos,
+        candidato1_pct: scrapedData.candidato1_pct,
+        candidato2_nombre: scrapedData.candidato2_nombre,
+        candidato2_partido: scrapedData.candidato2_partido || 'JUNTOS POR EL PERÚ',
+        candidato2_votos: scrapedData.candidato2_votos,
+        candidato2_pct: scrapedData.candidato2_pct,
+        votos_nulos: scrapedData.votos_nulos || 0,
+        votos_nulos_pct: scrapedData.votos_nulos_pct || 0,
+        votos_blancos: scrapedData.votos_blancos || 0,
+        votos_blancos_pct: scrapedData.votos_blancos_pct || 0
+      };
+
+      fetch(`${remoteUrl}/api/push`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${remoteToken}`
+        },
+        body: JSON.stringify(dataToPush)
+      })
+      .then(res => res.json())
+      .then(result => {
+        if (result.success) {
+          console.log('[Auto-Push] Registro sincronizado en la nube exitosamente.');
+        } else {
+          console.error('[Auto-Push] Error al sincronizar en la nube:', result.error || result.reason);
+        }
+      })
+      .catch(err => {
+        console.error('[Auto-Push] Error de red al sincronizar en la nube:', err.message);
+      });
+    }
   }
   
   return { saved: hasChanged, id };

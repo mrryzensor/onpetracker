@@ -88,9 +88,14 @@
           <span class="status-badge" id="victory-status-badge">Matemáticamente Abierto</span>
         </div>
         <div class="victory-grid">
-          <div class="victory-metric-box">
-            <span class="victory-label">Diferencia de Votos Actual</span>
-            <span class="victory-value" id="victory-current-gap">-</span>
+          <div class="victory-metric-box" style="display:flex; align-items:center; gap:12px;">
+            <div id="victory-leader-face-container" style="display:none; align-items:center; justify-content:center;">
+              <img id="victory-leader-face" src="" style="width:40px; height:50px; object-fit:contain; border-radius:6px; border:1.5px solid rgba(255,255,255,0.2); background:#fff;" alt="Líder">
+            </div>
+            <div style="display:flex; flex-direction:column;">
+              <span class="victory-label">Diferencia de Votos Actual</span>
+              <span class="victory-value" id="victory-current-gap">-</span>
+            </div>
           </div>
           <div class="victory-metric-box">
             <span class="victory-label">Votos Restantes por Escrutar (Est.)</span>
@@ -247,7 +252,10 @@
             <div class="impact-split-container">
               <!-- Keiko (Naranja) -->
               <div class="impact-column">
-                <div class="column-header-cand c1-title">FUERZA POPULAR</div>
+                <div class="column-header-cand c1-title" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:0.4rem 0.5rem;">
+                  <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" style="width:34px; height:34px; border-radius:50%; border:1px solid #fff;" alt="Keiko">
+                  FUERZA POPULAR
+                </div>
                 
                 <div class="impact-bar-item">
                   <div class="impact-bar-label">
@@ -285,7 +293,10 @@
 
               <!-- Roberto (Teal) -->
               <div class="impact-column">
-                <div class="column-header-cand c2-title">JUNTOS POR EL PERÚ</div>
+                <div class="column-header-cand c2-title" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:0.4rem 0.5rem;">
+                  <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" style="width:34px; height:34px; border-radius:50%; border:1px solid #fff;" alt="Roberto">
+                  JUNTOS POR EL PERÚ
+                </div>
 
                 <div class="impact-bar-item">
                   <div class="impact-bar-label">
@@ -347,13 +358,19 @@
             <div class="projection-final-100">
               <div class="proj-final-title">Resultado Final Estimado (100%)</div>
               <div class="proj-final-grid">
-                <div class="proj-final-metric">
-                  <span class="proj-name">Keiko Fujimori</span>
+                <div class="proj-final-metric" style="display:flex; flex-direction:column; align-items:center;">
+                  <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                    <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" style="width:30px; height:30px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);" alt="Keiko">
+                    <span class="proj-name">Keiko Fujimori</span>
+                  </div>
                   <span class="proj-votes" id="reg-final-votes-k">- votos</span>
                   <span class="proj-pct" id="reg-final-pct-k">0.00%</span>
                 </div>
-                <div class="proj-final-metric">
-                  <span class="proj-name">Roberto Sánchez</span>
+                <div class="proj-final-metric" style="display:flex; flex-direction:column; align-items:center;">
+                  <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                    <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" style="width:30px; height:30px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);" alt="Roberto">
+                    <span class="proj-name">Roberto Sánchez</span>
+                  </div>
                   <span class="proj-votes" id="reg-final-votes-r">- votos</span>
                   <span class="proj-pct" id="reg-final-pct-r">0.00%</span>
                 </div>

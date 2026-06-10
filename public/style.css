@@ -1611,6 +1611,40 @@ body {
   box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
 }
 
+/* Hover Tooltip with Candidate Faces */
+.tooltip-trigger {
+  position: relative;
+  cursor: help;
+}
+
+.tooltip-trigger:hover {
+  z-index: 99999 !important;
+}
+
+.tooltip-content {
+  display: none;
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  z-index: 99999 !important;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.tooltip-trigger:hover .tooltip-content {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, 4px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
 
 
 
