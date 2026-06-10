@@ -36,10 +36,7 @@
           <button id="btn-sync" class="btn btn-primary">
             <i class="fa-solid fa-rotate"></i> Sincronizar (Server)
           </button>
-          <a href="#" id="bookmarklet-link" class="btn btn-secondary bookmarklet-btn" title="Arrastra este botón a tu barra de marcadores">
-            <i class="fa-solid fa-bookmark"></i> Marcador ONPE
-          </a>
-          <button id="btn-manual-paste" class="btn btn-tertiary" title="Pegar texto copiado de la ONPE">
+          <button id="btn-manual-paste" class="btn btn-tertiary" title="Pegar texto/JSON copiado de la ONPE">
             <i class="fa-solid fa-paste"></i> Pegar Reporte
           </button>
         </div>
@@ -121,54 +118,53 @@
       </section>
 
       <!-- Candidates Score Card -->
-      <section class="card candidates-card">
+      <section class="card candidates-card full-width">
         <div class="card-header">
-          <h2><i class="fa-solid fa-users"></i> Resultados Presidenciales</h2>
+          <h2><i class="fa-solid fa-users"></i> Resultados Presidenciales en Tiempo Real</h2>
         </div>
         <div class="candidates-split">
-          
-          <!-- Candidate 1 -->
-          <div class="candidate-row candidate-left" id="c1-row">
-            <div class="candidate-avatar">
-              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" alt="Keiko Fujimori" class="candidate-photo" id="c1-photo">
+          <!-- Candidato 1 Card -->
+          <div class="candidate-row" id="c1-row">
+            <div class="candidate-left">
+              <img src="" alt="" id="c1-photo">
+              <div class="candidate-meta">
+                <h3 id="c1-name">-</h3>
+                <span class="party-name" id="c1-party">-</span>
+                <div class="votes-num" id="c1-votes">- votos</div>
+              </div>
             </div>
-            <div class="candidate-meta">
-              <h3 id="c1-name">Candidato A</h3>
-              <p class="party-name" id="c1-party">Fuerza Popular</p>
-              <div class="votes-num" id="c1-votes">- votos</div>
-            </div>
-            <div class="candidate-pct-badge pct-c1" id="c1-pct">
-              - %
+            <div class="candidate-right">
+              <span class="candidate-pct-badge" id="c1-pct">- %</span>
             </div>
           </div>
 
           <div class="vs-divider">VS</div>
 
-          <!-- Candidate 2 -->
-          <div class="candidate-row candidate-right" id="c2-row">
-            <div class="candidate-avatar">
-              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" alt="Roberto Sánchez" class="candidate-photo" id="c2-photo">
+          <!-- Candidato 2 Card -->
+          <div class="candidate-row" id="c2-row">
+            <div class="candidate-left">
+              <img src="" alt="" id="c2-photo">
+              <div class="candidate-meta">
+                <h3 id="c2-name">-</h3>
+                <span class="party-name" id="c2-party">-</span>
+                <div class="votes-num" id="c2-votes">- votos</div>
+              </div>
             </div>
-            <div class="candidate-meta">
-              <h3 id="c2-name">Candidato B</h3>
-              <p class="party-name" id="c2-party">Juntos Por El Perú</p>
-              <div class="votes-num" id="c2-votes">- votos</div>
-            </div>
-            <div class="candidate-pct-badge pct-c2" id="c2-pct">
-              - %
+            <div class="candidate-right">
+              <span class="candidate-pct-badge" id="c2-pct">- %</span>
             </div>
           </div>
         </div>
 
-        <!-- Brecha / Gap bar -->
+        <!-- Gap/Difference Bar Section -->
         <div class="gap-bar-section">
           <div class="gap-bar-header">
-            <span>Diferencia Actual</span>
-            <span class="gap-difference-value" id="gap-difference-val">- votos</span>
+            <span>Diferencia Neta / Brecha</span>
+            <span class="gap-difference-value" id="gap-difference-val">0 votos</span>
           </div>
           <div class="gap-visual-bar">
-            <div class="gap-indicator" id="gap-indicator" style="left: 50%;"></div>
             <div class="gap-center-line"></div>
+            <div class="gap-indicator" id="gap-indicator"></div>
           </div>
           <div class="gap-bar-footer">
             <span id="gap-leader-left">-</span>
@@ -177,106 +173,109 @@
         </div>
       </section>
 
-      <!-- History Graph Card -->
-      <section class="card graph-card">
-        <div class="card-header">
-          <h2><i class="fa-solid fa-chart-line"></i> Evolución Histórica de la Brecha</h2>
-          <span class="hint-text">Registros acumulados en tu DB local</span>
-        </div>
-        <div class="chart-container">
-          <canvas id="historyChart"></canvas>
-        </div>
-      </section>
-
-      <!-- Projection Card -->
+      <!-- Projection Table Card -->
       <section class="card projection-card full-width">
         <div class="card-header">
-          <h2><i class="fa-solid fa-calculator"></i> Proyección Estadística del Escrutinio</h2>
-          <span class="hint-text">Cálculo de tendencia lineal (regresión sobre actas escrutadas)</span>
+          <h2><i class="fa-solid fa-chart-line"></i> Proyección Estadística de Tendencia</h2>
         </div>
+        
         <div class="projection-grid">
           <div class="projection-metric">
-            <span class="metric-label">Hora Estimada de Empate</span>
-            <span class="metric-value" id="proj-tie-time">-</span>
-            <span class="metric-percentage" id="proj-tie-pct">al -% de actas</span>
+            <span class="victory-label">Hora Estimada de Cruce/Empate</span>
+            <span class="victory-value" id="proj-tie-time">Calculando...</span>
+            <span class="hint-text" id="proj-tie-pct">al - % de actas</span>
           </div>
           <div class="projection-metric">
-            <span class="metric-label">Diferencia Final Proyectada (al 100%)</span>
-            <span class="metric-value" id="proj-final-diff">-</span>
-            <span class="metric-percentage" id="proj-final-winner">Cargando...</span>
-            <span class="hint-text" id="proj-final-pcts" style="margin-top: 0.4rem; font-size: 0.95rem; color: #fff; font-weight: 600;">-</span>
+            <span class="victory-label">Resultado Final Proyectado (100%)</span>
+            <span class="victory-value" id="proj-final-winner">Calculando...</span>
+            <span class="hint-text" id="proj-final-diff">Diferencia: - votos</span>
           </div>
         </div>
-        <div class="chart-container projection-chart-container">
+
+        <div class="proj-final-difference" id="proj-final-pcts">
+          -
+        </div>
+
+        <div class="projection-chart-container">
           <canvas id="projectionChart"></canvas>
         </div>
       </section>
-      
-      <!-- Regional Impact Card -->
+
+      <!-- Regional Impact and JEE Card -->
       <section class="card regional-card full-width">
         <div class="card-header">
-          <h2><i class="fa-solid fa-map-location-dot"></i> Impacto Estimado de Actas Pendientes por Región</h2>
-          <span class="hint-text">Simulación basada en la distribución histórica y de tendencia de las actas restantes</span>
+          <h2><i class="fa-solid fa-earth-americas"></i> Proyección de Impacto Regional (Actas Pendientes)</h2>
         </div>
+
         <div class="regional-container">
-          <!-- Column 1: Faltan por contar -->
+          <!-- Bloque 1: ¿Qué falta contar? -->
           <div class="regional-section-box">
             <div class="section-title">¿Qué falta contar?</div>
             <div class="pending-overview">
-              <div class="pending-total-val" id="reg-pending-votes-val">-</div>
-              <div class="pending-total-label">votos válidos por contabilizar (<span id="reg-pending-pct-val">-</span> del total)</div>
+              <span class="pending-total-val" id="reg-pending-votes-val">-</span>
+              <span class="pending-total-label">votos aproximados por escrutar (<strong id="reg-pending-pct-val">-%</strong> del padrón)</span>
             </div>
+            
             <div class="regional-distribution-list">
               <div class="regional-dist-item">
-                <span class="dist-icon"><i class="fa-solid fa-earth-americas"></i></span>
+                <div class="dist-icon"><i class="fa-solid fa-plane"></i></div>
                 <div class="dist-details">
-                  <span class="dist-name">Extranjero</span>
-                  <span class="dist-votes" id="reg-pending-ext-val">- votos</span>
-                  <span class="dist-pct">(45.6% del pendiente)</span>
+                  <span class="dist-name">Voto Extranjero</span>
+                  <span class="dist-votes" id="reg-pending-ext-val">-</span>
                 </div>
               </div>
               <div class="regional-dist-item">
-                <span class="dist-icon"><i class="fa-solid fa-city"></i></span>
+                <div class="dist-icon"><i class="fa-solid fa-city"></i></div>
                 <div class="dist-details">
-                  <span class="dist-name">Lima</span>
-                  <span class="dist-votes" id="reg-pending-lim-val">- votos</span>
-                  <span class="dist-pct">(19.9% del pendiente)</span>
+                  <span class="dist-name">Lima Metropolitana</span>
+                  <span class="dist-votes" id="reg-pending-lim-val">-</span>
                 </div>
               </div>
               <div class="regional-dist-item">
-                <span class="dist-icon"><i class="fa-solid fa-tree"></i></span>
+                <div class="dist-icon"><i class="fa-solid fa-tree"></i></div>
                 <div class="dist-details">
                   <span class="dist-name">Loreto</span>
-                  <span class="dist-votes" id="reg-pending-lor-val">- votos</span>
-                  <span class="dist-pct">(11.6% del pendiente)</span>
+                  <span class="dist-votes" id="reg-pending-lor-val">-</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Column 2: Impacto neto por regiones clave -->
+          <!-- Bloque 2: Impacto proyectado -->
           <div class="regional-section-box">
-            <div class="section-title">Impacto Neto en Diferencia de Votos</div>
+            <div class="section-title">Votos Netos de Ventaja Proyectada</div>
             <div class="impact-split-container">
-              <!-- Keiko columns -->
-              <div class="impact-column col-keiko">
-                <div class="column-header-cand c1-title">Suman más a Keiko</div>
+              <!-- Keiko (Naranja) -->
+              <div class="impact-column">
+                <div class="column-header-cand c1-title">FUERZA POPULAR</div>
+                
                 <div class="impact-bar-item">
-                  <div class="impact-bar-label">Extranjero <span class="impact-bar-value" id="reg-impact-ext-k">-</span></div>
+                  <div class="impact-bar-label">
+                    <span>Voto Extranjero</span>
+                    <span class="impact-bar-value" id="reg-impact-ext-k">+0</span>
+                  </div>
                   <div class="impact-bar-wrapper">
                     <div class="impact-bar bg-c1" id="reg-bar-ext-k" style="width: 0%"></div>
                   </div>
                   <div class="impact-bar-details" id="reg-details-ext-k">-</div>
                 </div>
+
                 <div class="impact-bar-item">
-                  <div class="impact-bar-label">Lima <span class="impact-bar-value" id="reg-impact-lim-k">-</span></div>
+                  <div class="impact-bar-label">
+                    <span>Lima Metropolitana</span>
+                    <span class="impact-bar-value" id="reg-impact-lim-k">+0</span>
+                  </div>
                   <div class="impact-bar-wrapper">
                     <div class="impact-bar bg-c1" id="reg-bar-lim-k" style="width: 0%"></div>
                   </div>
                   <div class="impact-bar-details" id="reg-details-lim-k">-</div>
                 </div>
+
                 <div class="impact-bar-item">
-                  <div class="impact-bar-label">Loreto <span class="impact-bar-value" id="reg-impact-lor-k">-</span></div>
+                  <div class="impact-bar-label">
+                    <span>Loreto</span>
+                    <span class="impact-bar-value" id="reg-impact-lor-k">+0</span>
+                  </div>
                   <div class="impact-bar-wrapper">
                     <div class="impact-bar bg-c1" id="reg-bar-lor-k" style="width: 0%"></div>
                   </div>
@@ -284,25 +283,37 @@
                 </div>
               </div>
 
-              <!-- Roberto columns -->
-              <div class="impact-column col-roberto">
-                <div class="column-header-cand c2-title">Suman más a Roberto</div>
+              <!-- Roberto (Teal) -->
+              <div class="impact-column">
+                <div class="column-header-cand c2-title">JUNTOS POR EL PERÚ</div>
+
                 <div class="impact-bar-item">
-                  <div class="impact-bar-label">Cusco <span class="impact-bar-value" id="reg-impact-cus-r">-</span></div>
+                  <div class="impact-bar-label">
+                    <span>Cusco</span>
+                    <span class="impact-bar-value" id="reg-impact-cus-r">+0</span>
+                  </div>
                   <div class="impact-bar-wrapper">
                     <div class="impact-bar bg-c2" id="reg-bar-cus-r" style="width: 0%"></div>
                   </div>
                   <div class="impact-bar-details" id="reg-details-cus-r">-</div>
                 </div>
+
                 <div class="impact-bar-item">
-                  <div class="impact-bar-label">Ayacucho <span class="impact-bar-value" id="reg-impact-aya-r">-</span></div>
+                  <div class="impact-bar-label">
+                    <span>Ayacucho</span>
+                    <span class="impact-bar-value" id="reg-impact-aya-r">+0</span>
+                  </div>
                   <div class="impact-bar-wrapper">
                     <div class="impact-bar bg-c2" id="reg-bar-aya-r" style="width: 0%"></div>
                   </div>
                   <div class="impact-bar-details" id="reg-details-aya-r">-</div>
                 </div>
+
                 <div class="impact-bar-item">
-                  <div class="impact-bar-label">Amazonas <span class="impact-bar-value" id="reg-impact-ama-r">-</span></div>
+                  <div class="impact-bar-label">
+                    <span>Amazonas</span>
+                    <span class="impact-bar-value" id="reg-impact-ama-r">+0</span>
+                  </div>
                   <div class="impact-bar-wrapper">
                     <div class="impact-bar bg-c2" id="reg-bar-ama-r" style="width: 0%"></div>
                   </div>
@@ -310,93 +321,108 @@
                 </div>
               </div>
             </div>
-            <div class="lima-breakdown-trigger-area">
-              <button id="btn-toggle-lima-breakdown" class="btn btn-secondary btn-sm">
-                <i class="fa-solid fa-list-check"></i> Ver Proyección por Provincias de Lima
-              </button>
-            </div>
           </div>
 
-          <!-- Column 3: Balance Nacional y Proyección Final -->
+          <!-- Bloque 3: Balance Proyectado al 100% -->
           <div class="regional-section-box">
-            <div class="section-title">Balance de Votos Pendientes</div>
+            <div class="section-title">Proyección al 100% de Actas</div>
+            
             <div class="balance-card">
               <div class="balance-line">
-                <span>Total Estimado Keiko:</span>
+                <span>Sumatoria Keiko:</span>
                 <span class="balance-value c1-text" id="reg-balance-k">+0</span>
               </div>
               <div class="balance-line">
-                <span>Total Estimado Roberto:</span>
+                <span>Sumatoria Roberto:</span>
                 <span class="balance-value c2-text" id="reg-balance-r">+0</span>
               </div>
               <div class="balance-divider"></div>
               <div class="balance-net-line">
-                <span>Diferencia Neta:</span>
-                <span class="balance-net-value" id="reg-balance-net">-</span>
+                <span>Ventaja en Pendientes:</span>
+                <span class="balance-net-value" id="reg-balance-net">+0</span>
               </div>
-              <div class="balance-winner-badge" id="reg-balance-winner">Proyectando...</div>
+              <div class="balance-winner-badge" id="reg-balance-winner">-</div>
             </div>
+
             <div class="projection-final-100">
-              <div class="proj-final-title">Proyección Final al 100% de Actas</div>
+              <div class="proj-final-title">Resultado Final Estimado (100%)</div>
               <div class="proj-final-grid">
                 <div class="proj-final-metric">
                   <span class="proj-name">Keiko Fujimori</span>
                   <span class="proj-votes" id="reg-final-votes-k">- votos</span>
-                  <span class="proj-pct" id="reg-final-pct-k">- %</span>
+                  <span class="proj-pct" id="reg-final-pct-k">0.00%</span>
                 </div>
                 <div class="proj-final-metric">
                   <span class="proj-name">Roberto Sánchez</span>
                   <span class="proj-votes" id="reg-final-votes-r">- votos</span>
-                  <span class="proj-pct" id="reg-final-pct-r">- %</span>
+                  <span class="proj-pct" id="reg-final-pct-r">0.00%</span>
                 </div>
-              </div>
-              <div class="proj-final-difference" id="reg-final-diff-val">
-                Diferencia Proyectada: <strong>-</strong>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Collapsible Panel for Lima Provincias/Distritos JEE Breakdown -->
-        <div class="lima-breakdown-panel collapsed" id="lima-breakdown-panel">
+        <div class="proj-final-difference" id="reg-final-diff-val">
+          Diferencia Proyectada: - votos
+        </div>
+
+        <!-- Footer regional summary text -->
+        <div class="regional-summary-footer">
+          <div class="summary-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <p class="summary-text" id="reg-summary-text">
+            Cargando análisis territorial de actas pendientes...
+          </p>
+        </div>
+
+        <!-- Lima Distritos Trigger -->
+        <div class="lima-breakdown-trigger-area">
+          <button id="btn-toggle-lima-breakdown" class="btn">
+            <i class="fa-solid fa-magnifying-glass-location"></i> Ver Desglose de Actas JEE de Lima Provincias y Distritos
+          </button>
+        </div>
+
+        <!-- Lima Distritos Panel -->
+        <div id="lima-breakdown-panel" class="lima-breakdown-panel collapsed">
           <div class="panel-header">
-            <h3><i class="fa-solid fa-map-location"></i> Detalle de Actas Enviadas al JEE - Provincias y Distritos de Lima</h3>
-            <button id="btn-close-lima-breakdown" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+            <h3><i class="fa-solid fa-map-location-dot"></i> Desglose de Actas Pendientes en Lima (JEE)</h3>
+            <button id="btn-close-lima-breakdown" class="btn-close">&times;</button>
           </div>
-          <div class="table-responsive">
+          <div style="overflow-x: auto;">
             <table class="lima-provincias-table">
               <thead>
                 <tr>
-                  <th>Provincia / Distrito</th>
-                  <th>Actas JEE (Est.)</th>
-                  <th>Votos JEE (Est.)</th>
-                  <th>Tendencia (% Keiko / % Roberto)</th>
-                  <th>Votos Keiko (Est.)</th>
-                  <th>Votos Roberto (Est.)</th>
+                  <th>Jurisdicción</th>
+                  <th>Actas JEE</th>
+                  <th>Votos Est.</th>
+                  <th>Tendencia (K/R)</th>
+                  <th>Votos Keiko</th>
+                  <th>Votos Roberto</th>
                   <th>Impacto Neto</th>
                 </tr>
               </thead>
               <tbody id="lima-breakdown-body">
-                <!-- Poblado dinámicamente por JS -->
+                <tr>
+                  <td colspan="7" style="text-align: center;">Cargando desglose...</td>
+                </tr>
               </tbody>
             </table>
           </div>
-        </div>
-
-        <div class="regional-methodology-note">
-          <i class="fa-solid fa-circle-info"></i> <span><strong>Metodología de Proyección Regional:</strong> Los márgenes de votación y las proporciones de actas por escrutar se basan en el análisis estadístico de la distribución geográfica de actas de la primera vuelta 2026 y series históricas de la ONPE para votación en el extranjero y regiones clave.</span>
-        </div>
-
-        <div class="regional-summary-footer">
-          <div class="summary-icon"><i class="fa-solid fa-lightbulb"></i></div>
-          <p class="summary-text" id="reg-summary-text">Cargando proyección regional...</p>
+          <div class="regional-methodology-note">
+            <i class="fa-solid fa-circle-info"></i>
+            <div>
+              <strong>Metodología de Estimación:</strong> La distribución de votos de actas enviadas al JEE de Lima se calcula ponderando el peso electoral de cada provincia y distrito según el padrón real. Los porcentajes de votación se ajustan dinámicamente aplicando la desviación observada en la tendencia nacional actual respecto al histórico. Miraflores, San Isidro, Surco, San Borja y La Molina se agrupan en "Residenciales".
+            </div>
+          </div>
         </div>
       </section>
 
-      <!-- History Table / Log -->
-      <section class="card table-card full-width">
+      <!-- History Table Card -->
+      <section class="card history-card full-width">
         <div class="card-header">
-          <h2><i class="fa-solid fa-history"></i> Registro Histórico de Actualizaciones</h2>
+          <h2><i class="fa-solid fa-clock-rotate-left"></i> Historial de Actualizaciones (SQLite)</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="historyChart"></canvas>
         </div>
         <div class="table-responsive">
           <table class="history-table">
@@ -405,8 +431,8 @@
                 <th>Fecha de Registro</th>
                 <th>Fecha ONPE</th>
                 <th>Actas Cont.</th>
-                <th id="th-c1">Candidato A</th>
-                <th id="th-c2">Candidato B</th>
+                <th>Candidato A</th>
+                <th>Candidato B</th>
                 <th>Diferencia</th>
                 <th>Ventaja de</th>
               </tr>
@@ -436,11 +462,22 @@
         <button id="btn-close-modal" class="btn-close">&times;</button>
       </div>
       <div class="modal-body">
-        <p>Abre la página oficial de la ONPE, selecciona todo el texto (<strong>Ctrl + A</strong>), cópialo (<strong>Ctrl + C</strong>) y pégalo completo aquí:</p>
-        <textarea id="paste-textarea" placeholder="Pega el contenido completo de la página de la ONPE aquí..." rows="12"></textarea>
+        <p>Dado que la ONPE limita el copiado de texto plano, puedes abrir los siguientes enlaces oficiales directo en tu navegador (se abrirán en pestañas nuevas), copiar el texto JSON completo y pegarlo en el cuadro de abajo:</p>
+        
+        <div class="direct-links-grid">
+          <a href="https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general/totales?idEleccion=10&tipoFiltro=eleccion" target="_blank" class="btn btn-direct-link">
+            <i class="fa-solid fa-file-invoice"></i> 1. Ver JSON de Actas (Totales)
+          </a>
+          <a href="https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general/participantes?idEleccion=10&tipoFiltro=eleccion" target="_blank" class="btn btn-direct-link">
+            <i class="fa-solid fa-users"></i> 2. Ver JSON de Votos (Candidatos)
+          </a>
+        </div>
+
+        <textarea id="paste-textarea" placeholder="Pega el contenido JSON de cualquiera de los dos enlaces de arriba o el reporte de texto aquí..." rows="10"></textarea>
+        
         <div class="modal-actions">
           <button id="btn-process-paste" class="btn btn-primary">
-            <i class="fa-solid fa-bolt"></i> Procesar Reporte
+            <i class="fa-solid fa-bolt"></i> Procesar Reporte/JSON
           </button>
         </div>
       </div>

@@ -50,6 +50,31 @@ async function processAndSaveData(scrapedData) {
   // Buscar el último registro guardado
   const latestRecord = await db.getLatestRecord();
   
+  // Fusionar si es una actualización parcial
+  if (latestRecord) {
+    if (scrapedData.type === 'totales') {
+      scrapedData.candidato1_nombre = latestRecord.candidato1_nombre;
+      scrapedData.candidato1_partido = latestRecord.candidato1_partido;
+      scrapedData.candidato1_votos = latestRecord.candidato1_votos;
+      scrapedData.candidato1_pct = latestRecord.candidato1_pct;
+      scrapedData.candidato2_nombre = latestRecord.candidato2_nombre;
+      scrapedData.candidato2_partido = latestRecord.candidato2_partido;
+      scrapedData.candidato2_votos = latestRecord.candidato2_votos;
+      scrapedData.candidato2_pct = latestRecord.candidato2_pct;
+    } else if (scrapedData.type === 'participantes') {
+      scrapedData.timestamp_onpe = latestRecord.onpe_timestamp;
+      scrapedData.actas_contabilizadas = latestRecord.actas_contabilizadas;
+      scrapedData.actas_contabilizadas_pct = latestRecord.actas_contabilizadas_pct;
+      scrapedData.actas_procesadas = latestRecord.actas_procesadas;
+      scrapedData.actas_procesadas_pct = latestRecord.actas_procesadas_pct;
+    }
+  } else {
+    // Si la DB está vacía, no permitir parciales
+    if (scrapedData.type === 'totales' || scrapedData.type === 'participantes') {
+      throw new Error('La base de datos está vacía. Debes ingresar un reporte de texto completo la primera vez para registrar ambos candidatos.');
+    }
+  }
+
   let hasChanged = false;
   
   if (!latestRecord) {

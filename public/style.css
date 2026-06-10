@@ -739,6 +739,11 @@ body {
     width: 100%;
     gap: 1rem;
   }
+  .sync-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+  }
   .sync-info {
     flex-direction: column;
     align-items: flex-start;
@@ -1575,6 +1580,37 @@ body {
   background-color: rgba(56, 189, 248, 0.2);
   border-color: rgba(56, 189, 248, 0.4);
 }
+
+.direct-links-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .direct-links-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-direct-link {
+  text-decoration: none;
+  background-color: rgba(168, 85, 247, 0.1);
+  border: 1px dashed rgba(168, 85, 247, 0.3);
+  color: #c084fc;
+  justify-content: center;
+  font-size: 0.85rem;
+  padding: 0.75rem 1rem;
+}
+
+.btn-direct-link:hover {
+  background-color: rgba(168, 85, 247, 0.2);
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+}
+
 
 
 
