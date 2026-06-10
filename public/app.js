@@ -580,15 +580,24 @@ async function loadLatest() {
 
     // 2. Porcentaje de avance de actas por región (Estimación de rezago del voto extranjero)
     const pctNat = data.actas_contabilizadas_pct;
-    let pctProgressExt = 0;
-    if (pctNat > 50) {
-      pctProgressExt = Math.min(100, (pctNat - 50) * 2);
-    }
+    
+    // Usar datos reales del extranjero si están guardados en la base de datos
+    const hasRealExt = data.extranjero_actas_pct > 0 || data.extranjero_k_votos > 0 || data.extranjero_r_votos > 0;
+    const pctProgressExt = hasRealExt ? data.extranjero_actas_pct : (pctNat > 50 ? Math.min(100, (pctNat - 50) * 2) : 0);
+    
     // Avance estimado para regiones nacionales
     const pctProgressNat = Math.min(100, pctNat + (weightExt * (pctNat - pctProgressExt) / (1 - weightExt)));
 
     // 3. Votos restantes estimados por región
-    const remExt = Math.max(0, Math.round(estTotalValidVotes * weightExt * (1 - pctProgressExt / 100)));
+    let remExt = 0;
+    if (hasRealExt) {
+      const extCurrentValid = data.extranjero_k_votos + data.extranjero_r_votos;
+      const extEstTotalValid = pctProgressExt > 0 ? (extCurrentValid / (pctProgressExt / 100)) : extCurrentValid;
+      remExt = Math.max(0, Math.round(extEstTotalValid - extCurrentValid));
+    } else {
+      remExt = Math.max(0, Math.round(estTotalValidVotes * weightExt * (1 - pctProgressExt / 100)));
+    }
+    
     const remLim = Math.max(0, Math.round(estTotalValidVotes * weightLim * (1 - pctProgressNat / 100)));
     const remLor = Math.max(0, Math.round(estTotalValidVotes * weightLor * (1 - pctProgressNat / 100)));
     const remCus = Math.max(0, Math.round(estTotalValidVotes * weightCus * (1 - pctProgressNat / 100)));
@@ -625,7 +634,7 @@ async function loadLatest() {
       return { pK, pR };
     };
 
-    const extPcts = getPcts(adjMarginExt);
+    const extPcts = hasRealExt ? { pK: data.extranjero_k_pct / 100, pR: data.extranjero_r_pct / 100 } : getPcts(adjMarginExt);
     const limPcts = getPcts(adjMarginLim);
     const lorPcts = getPcts(adjMarginLor);
     const cusPcts = getPcts(adjMarginCus);
@@ -762,10 +771,22 @@ async function loadLatest() {
     };
 
     // Actualizar sección del desglose de ámbitos (Extranjero y Perú Pendientes)
-    const totalExtValidVotes = estTotalValidVotes * weightExt;
-    const scrutinizedExt = totalExtValidVotes * (pctProgressExt / 100);
-    const extK_current = scrutinizedExt * extPcts.pK;
-    const extR_current = scrutinizedExt * extPcts.pR;
+    let extK_current = 0;
+    let extR_current = 0;
+    let ext_k_pct_display = extPcts.pK * 100;
+    let ext_r_pct_display = extPcts.pR * 100;
+
+    if (hasRealExt) {
+      extK_current = data.extranjero_k_votos;
+      extR_current = data.extranjero_r_votos;
+      ext_k_pct_display = data.extranjero_k_pct;
+      ext_r_pct_display = data.extranjero_r_pct;
+    } else {
+      const totalExtValidVotes = estTotalValidVotes * weightExt;
+      const scrutinizedExt = totalExtValidVotes * (pctProgressExt / 100);
+      extK_current = Math.round(scrutinizedExt * extPcts.pK);
+      extR_current = Math.round(scrutinizedExt * extPcts.pR);
+    }
     
     const remPeru = Math.max(0, remainingVotes - remExt);
     const pendingPeruK = Math.max(0, totPendingK - extK);
@@ -780,13 +801,13 @@ async function loadLatest() {
     const peruVotesKEl = document.getElementById('peru-pending-votes-k');
     const peruVotesREl = document.getElementById('peru-pending-votes-r');
 
-    if (extBadgeEl) extBadgeEl.innerText = `${pctProgressExt.toFixed(1)}% escrutado`;
-    if (extVotesKEl) extVotesKEl.innerText = `${formatNumber(Math.round(extK_current))} votos (${(extPcts.pK * 100).toFixed(2)}%)`;
-    if (extVotesREl) extVotesREl.innerText = `${formatNumber(Math.round(extR_current))} votos (${(extPcts.pR * 100).toFixed(2)}%)`;
+    if (extBadgeEl) extBadgeEl.innerText = `${pctProgressExt.toFixed(3)}% escrutado`;
+    if (extVotesKEl) extVotesKEl.innerText = `${formatNumber(extK_current)} votos (${ext_k_pct_display.toFixed(3)}%)`;
+    if (extVotesREl) extVotesREl.innerText = `${formatNumber(extR_current)} votos (${ext_r_pct_display.toFixed(3)}%)`;
 
     if (peruBadgeEl) peruBadgeEl.innerText = `${formatNumber(remPeru)} votos restantes`;
-    if (peruVotesKEl) peruVotesKEl.innerText = `${formatNumber(pendingPeruK)} votos (${pctPendingPeruK.toFixed(2)}%)`;
-    if (peruVotesREl) peruVotesREl.innerText = `${formatNumber(pendingPeruR)} votos (${pctPendingPeruR.toFixed(2)}%)`;
+    if (peruVotesKEl) peruVotesKEl.innerText = `${formatNumber(pendingPeruK)} votos (${pctPendingPeruK.toFixed(3)}%)`;
+    if (peruVotesREl) peruVotesREl.innerText = `${formatNumber(pendingPeruR)} votos (${pctPendingPeruR.toFixed(3)}%)`;
 
     // Asignar al DOM - Bloque 1: ¿Qué falta contar?
     document.getElementById('reg-pending-votes-val').innerText = formatNumber(remainingVotes);

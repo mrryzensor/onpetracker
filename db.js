@@ -39,7 +39,12 @@ function initDatabase() {
         votos_nulos INTEGER,
         votos_nulos_pct REAL,
         votos_blancos INTEGER,
-        votos_blancos_pct REAL
+        votos_blancos_pct REAL,
+        extranjero_actas_pct REAL,
+        extranjero_k_votos INTEGER,
+        extranjero_k_pct REAL,
+        extranjero_r_votos INTEGER,
+        extranjero_r_pct REAL
       )
     `;
     db.run(query, (err) => {
@@ -52,8 +57,16 @@ function initDatabase() {
           if (alterErr && !alterErr.message.includes('duplicate column name')) {
             console.warn('Alerta al alterar tabla para agregar onpe_timestamp:', alterErr.message);
           }
-          console.log('Tabla onpe_history inicializada con columna onpe_timestamp.');
-          resolve();
+          
+          // Migraciones para las columnas del voto extranjero
+          db.run("ALTER TABLE onpe_history ADD COLUMN extranjero_actas_pct REAL", () => {});
+          db.run("ALTER TABLE onpe_history ADD COLUMN extranjero_k_votos INTEGER", () => {});
+          db.run("ALTER TABLE onpe_history ADD COLUMN extranjero_k_pct REAL", () => {});
+          db.run("ALTER TABLE onpe_history ADD COLUMN extranjero_r_votos INTEGER", () => {});
+          db.run("ALTER TABLE onpe_history ADD COLUMN extranjero_r_pct REAL", () => {
+            console.log('Tabla onpe_history inicializada con columnas de extranjero.');
+            resolve();
+          });
         });
       }
     });
@@ -85,8 +98,10 @@ function insertRecord(data) {
         candidato1_nombre, candidato1_votos, candidato1_pct,
         candidato2_nombre, candidato2_votos, candidato2_pct,
         votos_nulos, votos_nulos_pct,
-        votos_blancos, votos_blancos_pct
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        votos_blancos, votos_blancos_pct,
+        extranjero_actas_pct, extranjero_k_votos, extranjero_k_pct,
+        extranjero_r_votos, extranjero_r_pct
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     
     db.run(query, [
@@ -105,7 +120,12 @@ function insertRecord(data) {
       data.votos_nulos,
       data.votos_nulos_pct,
       data.votos_blancos,
-      data.votos_blancos_pct
+      data.votos_blancos_pct,
+      data.extranjero_actas_pct || 0,
+      data.extranjero_k_votos || 0,
+      data.extranjero_k_pct || 0,
+      data.extranjero_r_votos || 0,
+      data.extranjero_r_pct || 0
     ], function(err) {
       if (err) {
         reject(err);

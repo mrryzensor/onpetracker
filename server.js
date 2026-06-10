@@ -69,6 +69,13 @@ async function processAndSaveData(scrapedData) {
       scrapedData.actas_procesadas = latestRecord.actas_procesadas;
       scrapedData.actas_procesadas_pct = latestRecord.actas_procesadas_pct;
     }
+
+    // Copiar campos de extranjero si faltan en la actualización parcial
+    scrapedData.extranjero_actas_pct = typeof scrapedData.extranjero_actas_pct !== 'undefined' ? scrapedData.extranjero_actas_pct : latestRecord.extranjero_actas_pct;
+    scrapedData.extranjero_k_votos = typeof scrapedData.extranjero_k_votos !== 'undefined' ? scrapedData.extranjero_k_votos : latestRecord.extranjero_k_votos;
+    scrapedData.extranjero_k_pct = typeof scrapedData.extranjero_k_pct !== 'undefined' ? scrapedData.extranjero_k_pct : latestRecord.extranjero_k_pct;
+    scrapedData.extranjero_r_votos = typeof scrapedData.extranjero_r_votos !== 'undefined' ? scrapedData.extranjero_r_votos : latestRecord.extranjero_r_votos;
+    scrapedData.extranjero_r_pct = typeof scrapedData.extranjero_r_pct !== 'undefined' ? scrapedData.extranjero_r_pct : latestRecord.extranjero_r_pct;
   } else {
     // Si la DB está vacía, no permitir parciales
     if (scrapedData.type === 'totales' || scrapedData.type === 'participantes') {
@@ -87,8 +94,9 @@ async function processAndSaveData(scrapedData) {
     const diffCandidato2 = scrapedData.candidato2_votos !== latestRecord.candidato2_votos;
     const diffActas = scrapedData.actas_contabilizadas !== latestRecord.actas_contabilizadas;
     const diffTimestamp = scrapedData.timestamp_onpe !== latestRecord.onpe_timestamp;
+    const diffExtranjero = scrapedData.extranjero_k_votos !== latestRecord.extranjero_k_votos || scrapedData.extranjero_actas_pct !== latestRecord.extranjero_actas_pct;
     
-    if (diffCandidato1 || diffCandidato2 || diffActas || diffTimestamp) {
+    if (diffCandidato1 || diffCandidato2 || diffActas || diffTimestamp || diffExtranjero) {
       console.log('¡Se detectaron cambios o un nuevo reporte oficial de la ONPE!');
       hasChanged = true;
     } else {
@@ -127,7 +135,12 @@ async function processAndSaveData(scrapedData) {
         votos_nulos: scrapedData.votos_nulos || 0,
         votos_nulos_pct: scrapedData.votos_nulos_pct || 0,
         votos_blancos: scrapedData.votos_blancos || 0,
-        votos_blancos_pct: scrapedData.votos_blancos_pct || 0
+        votos_blancos_pct: scrapedData.votos_blancos_pct || 0,
+        extranjero_actas_pct: scrapedData.extranjero_actas_pct || 0,
+        extranjero_k_votos: scrapedData.extranjero_k_votos || 0,
+        extranjero_k_pct: scrapedData.extranjero_k_pct || 0,
+        extranjero_r_votos: scrapedData.extranjero_r_votos || 0,
+        extranjero_r_pct: scrapedData.extranjero_r_pct || 0
       };
 
       fetch(`${remoteUrl}/api/push`, {

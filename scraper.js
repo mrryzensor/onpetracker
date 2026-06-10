@@ -54,7 +54,7 @@ async function scrapeONPE() {
     
     console.log('Extrayendo datos de la página...');
     
-    const rawData = await page.evaluate(() => {
+    const rawData = await page.evaluate(async () => {
       // 1. Obtener texto de última actualización
       const updatedText = document.querySelector('.actualizado b')?.innerText || '';
       
@@ -104,6 +104,25 @@ async function scrapeONPE() {
         totalActasText = totalActasSearch.parentElement?.innerText || '';
       }
 
+      // 6. Obtener datos de Extranjero desde la API interna (evita CORS y bloqueos)
+      let extTotales = null;
+      let extParticipantes = null;
+      try {
+        const tRes = await fetch('https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general/totales?idEleccion=10&tipoFiltro=ambito_geografico&idAmbitoGeografico=2');
+        const tJson = await tRes.json();
+        if (tJson && tJson.success) extTotales = tJson.data;
+      } catch (e) {
+        // ignore
+      }
+      
+      try {
+        const pRes = await fetch('https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general/participantes?idEleccion=10&tipoFiltro=ambito_geografico&idAmbitoGeografico=2');
+        const pJson = await pRes.json();
+        if (pJson && pJson.success) extParticipantes = pJson.data;
+      } catch (e) {
+        // ignore
+      }
+
       return {
         updatedText,
         contabilizadasVal,
@@ -114,6 +133,8 @@ async function scrapeONPE() {
         pctPendientes,
         candidates,
         totalActasText,
+        extTotales,
+        extParticipantes,
         bodyText: document.body.innerText
       };
     });
@@ -144,8 +165,31 @@ async function scrapeONPE() {
       votos_nulos: 0, // No disponibles en el resumen principal
       votos_nulos_pct: 0,
       votos_blancos: 0,
-      votos_blancos_pct: 0
+      votos_blancos_pct: 0,
+      extranjero_actas_pct: 0,
+      extranjero_k_votos: 0,
+      extranjero_k_pct: 0,
+      extranjero_r_votos: 0,
+      extranjero_r_pct: 0
     };
+
+    // Procesar datos de Extranjero si están disponibles
+    if (rawData.extTotales && typeof rawData.extTotales.actasContabilizadas !== 'undefined') {
+      parsedData.extranjero_actas_pct = parseFloat(rawData.extTotales.actasContabilizadas) || 0;
+    }
+    
+    if (rawData.extParticipantes && rawData.extParticipantes.length > 0) {
+      rawData.extParticipantes.forEach(cand => {
+        const isKeiko = cand.nombreCandidato.toUpperCase().includes('FUJIMORI') || cand.nombreAgrupacionPolitica.toUpperCase().includes('FUERZA');
+        if (isKeiko) {
+          parsedData.extranjero_k_votos = parseInt(cand.totalVotosValidos, 10) || 0;
+          parsedData.extranjero_k_pct = parseFloat(cand.porcentajeVotosValidos) || 0;
+        } else {
+          parsedData.extranjero_r_votos = parseInt(cand.totalVotosValidos, 10) || 0;
+          parsedData.extranjero_r_pct = parseFloat(cand.porcentajeVotosValidos) || 0;
+        }
+      });
+    }
 
     // Procesar los candidatos extraídos y asignarlos de forma consistente
     // Candidato 1 = Keiko Fujimori (Fuerza Popular)
