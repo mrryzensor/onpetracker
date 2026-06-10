@@ -854,24 +854,27 @@ async function loadHistory() {
       const diff = row.candidato1_votos - row.candidato2_votos;
       const diffAbs = Math.abs(diff);
       
-      const unifiedTooltipHtml = `
-        <span class="tooltip-content" style="min-width: 180px;">
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" style="width: 50px; height: 62px; object-fit: contain; background: #fff; border-radius: 4px; border: 1.5px solid #ff6c00;">
-              <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                <span style="font-weight: bold; color: #ff6c00; font-size: 0.8rem;">KEIKO</span>
-                <span style="color: #fff; font-size: 0.85rem; font-weight: 600;">${row.candidato1_pct.toFixed(3)}%</span>
-                <span style="color: var(--text-muted); font-size: 0.75rem;">${formatNumber(row.candidato1_votos)} votos</span>
-              </div>
+      const tooltipKeikoHtml = `
+        <span class="tooltip-content" style="min-width: 140px; text-align: center;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/10001088.png" style="width: 65px; height: 81px; object-fit: contain; background: #fff; border-radius: 6px; border: 1.5px solid #ff6c00;">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <span style="font-weight: bold; color: #ff6c00; font-size: 0.85rem;">KEIKO</span>
+              <span style="color: #fff; font-size: 0.9rem; font-weight: 600;">${row.candidato1_pct.toFixed(3)}%</span>
+              <span style="color: var(--text-muted); font-size: 0.75rem;">${formatNumber(row.candidato1_votos)} votos</span>
             </div>
-            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px; display: flex; align-items: center; gap: 8px;">
-              <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" style="width: 50px; height: 62px; object-fit: contain; background: #fff; border-radius: 4px; border: 1.5px solid #00c2a0;">
-              <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                <span style="font-weight: bold; color: #00c2a0; font-size: 0.8rem;">ROBERTO</span>
-                <span style="color: #fff; font-size: 0.85rem; font-weight: 600;">${row.candidato2_pct.toFixed(3)}%</span>
-                <span style="color: var(--text-muted); font-size: 0.75rem;">${formatNumber(row.candidato2_votos)} votos</span>
-              </div>
+          </div>
+        </span>
+      `;
+
+      const tooltipRobertoHtml = `
+        <span class="tooltip-content" style="min-width: 140px; text-align: center;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <img src="https://resultadosegundavuelta.onpe.gob.pe/assets/img-reales/candidatos/16002918.png" style="width: 65px; height: 81px; object-fit: contain; background: #fff; border-radius: 6px; border: 1.5px solid #00c2a0;">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <span style="font-weight: bold; color: #00c2a0; font-size: 0.85rem;">ROBERTO</span>
+              <span style="color: #fff; font-size: 0.9rem; font-weight: 600;">${row.candidato2_pct.toFixed(3)}%</span>
+              <span style="color: var(--text-muted); font-size: 0.75rem;">${formatNumber(row.candidato2_votos)} votos</span>
             </div>
           </div>
         </span>
@@ -882,13 +885,13 @@ async function loadHistory() {
         winnerBadge = `
           <span class="badge badge-c1 tooltip-trigger">
             ${row.candidato1_nombre ? row.candidato1_nombre.split(' ')[0] : 'Keiko'}
-            ${unifiedTooltipHtml}
+            ${tooltipKeikoHtml}
           </span>`;
       } else if (diff < 0) {
         winnerBadge = `
           <span class="badge badge-c2 tooltip-trigger">
             ${row.candidato2_nombre ? row.candidato2_nombre.split(' ')[0] : 'Roberto'}
-            ${unifiedTooltipHtml}
+            ${tooltipRobertoHtml}
           </span>`;
       } else {
         winnerBadge = `<span class="badge">Empate</span>`;
@@ -900,11 +903,11 @@ async function loadHistory() {
         <td><strong>${row.actas_contabilizadas_pct.toFixed(3)}%</strong> (${formatNumber(row.actas_contabilizadas)})</td>
         <td class="tooltip-trigger" style="color: var(--color-c1); font-weight:600;">
           ${row.candidato1_pct.toFixed(3)}% <span style="font-size:0.75rem; color:var(--text-muted)">(${formatNumber(row.candidato1_votos)})</span>
-          ${unifiedTooltipHtml}
+          ${tooltipKeikoHtml}
         </td>
         <td class="tooltip-trigger" style="color: var(--color-c2); font-weight:600;">
           ${row.candidato2_pct.toFixed(3)}% <span style="font-size:0.75rem; color:var(--text-muted)">(${formatNumber(row.candidato2_votos)})</span>
-          ${unifiedTooltipHtml}
+          ${tooltipRobertoHtml}
         </td>
         <td><strong>${formatNumber(diffAbs)}</strong></td>
         <td>${winnerBadge}</td>
@@ -1445,8 +1448,19 @@ function renderProjectionChart(history, m, c, currentPct) {
       if (!isMobile && tiePct !== null && tiePct > currentPct && tiePct <= 100) {
         const breakX = x.getPixelForValue(tiePct);
         const breakY = y.getPixelForValue(50.00);
+        const isLight = document.body.classList.contains('light-theme');
         
-        ctx.fillStyle = '#151824'; // Fondo oscuro a tono con la interfaz
+        // Dibujar línea vertical de punto de quiebre
+        ctx.strokeStyle = 'rgba(168, 85, 247, 0.45)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(breakX, top);
+        ctx.lineTo(breakX, bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        ctx.fillStyle = isLight ? '#ffffff' : '#151824'; // Fondo adaptativo
         ctx.strokeStyle = '#a855f7'; // Borde púrpura
         ctx.lineWidth = 1.5;
         
@@ -1465,7 +1479,7 @@ function renderProjectionChart(history, m, c, currentPct) {
         let rectX = breakX - width / 2;
         rectX = Math.max(chart.chartArea.left + 5, Math.min(chart.chartArea.right - width - 5, rectX));
         const breakCenterX = rectX + width / 2;
-        const rectY = breakY - height - 10;
+        const rectY = top + 10; // Posición fija en la parte superior del gráfico
         
         roundRect(ctx, rectX, rectY, width, height, 6, true, true);
         
@@ -1479,7 +1493,7 @@ function renderProjectionChart(history, m, c, currentPct) {
         ctx.stroke();
         
         // Dibujar textos dentro del globo
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = isLight ? '#0f2b5c' : '#fff';
         ctx.textAlign = 'center';
         ctx.font = 'bold 10px Poppins';
         ctx.fillText(txt1, breakCenterX, rectY + 15);

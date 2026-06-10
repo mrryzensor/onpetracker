@@ -1796,6 +1796,40 @@ body.light-theme .btn-theme-toggle:hover {
   background-color: rgba(15, 43, 92, 0.1);
 }
 
+/* Light Theme Remaining White Text Overrides */
+body.light-theme .card-header h2,
+body.light-theme .candidate-meta .votes-num,
+body.light-theme .pending-total-val,
+body.light-theme .dist-name,
+body.light-theme .dist-votes,
+body.light-theme .impact-bar-value,
+body.light-theme .balance-net-line,
+body.light-theme .proj-votes,
+body.light-theme .summary-text,
+body.light-theme .lima-provincias-table td,
+body.light-theme .lima-breakdown-panel h3,
+body.light-theme .lima-breakdown-panel .btn-close:hover,
+body.light-theme .tooltip-content span,
+body.light-theme .tooltip-content div,
+body.light-theme .btn-tertiary,
+body.light-theme h3,
+body.light-theme .section-title,
+body.light-theme .regional-section-box .section-title {
+  color: #0f2b5c !important;
+}
+
+/* Positioning tooltips downwards for first 3 rows to prevent clipping by sticky headers & charts */
+.history-table tbody tr:nth-child(-n+3) .tooltip-content {
+  bottom: auto;
+  top: 125%;
+  animation: fadeInDown 0.15s ease-out;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translate(-50%, -4px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
 
 
 
