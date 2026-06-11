@@ -17,7 +17,139 @@ function parseCleanFloat(str) {
   return parseFloat(clean) || 0;
 }
 
+async function scrapeONPEViaAPI(apiKey) {
+  console.log('Iniciando scraping vía ScraperAPI (Direct API Fetch)...');
+  const baseUrl = 'https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general';
+  
+  const fetchUrl = async (path) => {
+    const targetUrl = `${baseUrl}/${path}`;
+    const scraperApiUrl = `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(targetUrl)}`;
+    const res = await fetch(scraperApiUrl);
+    if (!res.ok) {
+      throw new Error(`Error al consultar ${path} vía ScraperAPI: Status ${res.status}`);
+    }
+    return res.json();
+  };
+
+  try {
+    const [natTotales, natParticipantes, extTotales, extParticipantes] = await Promise.all([
+      fetchUrl('totales?idEleccion=10&tipoFiltro=ambito_geografico&idAmbitoGeografico=1'),
+      fetchUrl('participantes?idEleccion=10&tipoFiltro=ambito_geografico&idAmbitoGeografico=1'),
+      fetchUrl('totales?idEleccion=10&tipoFiltro=ambito_geografico&idAmbitoGeografico=2'),
+      fetchUrl('participantes?idEleccion=10&tipoFiltro=ambito_geografico&idAmbitoGeografico=2')
+    ]);
+
+    console.log('Datos de la API obtenidos exitosamente vía ScraperAPI.');
+
+    // 1. Formatear la fecha
+    const d = natTotales.data;
+    const date = new Date(d.fechaActualizacion);
+    const formatterLima = new Intl.DateTimeFormat('es-PE', {
+      timeZone: 'America/Lima',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    
+    const parts = formatterLima.formatToParts(date);
+    const day = parts.find(p => p.type === 'day').value;
+    const month = parts.find(p => p.type === 'month').value;
+    const year = parts.find(p => p.type === 'year').value;
+    const hour24 = parseInt(parts.find(p => p.type === 'hour').value, 10);
+    const minutes = parts.find(p => p.type === 'minute').value;
+    const seconds = parts.find(p => p.type === 'second').value;
+    
+    const hr12 = hour24 % 12 || 12;
+    const formattedHours = String(hr12).padStart(2, '0');
+    const ampm = hour24 >= 12 ? 'p. m.' : 'a. m.';
+    
+    const timestamp_onpe = `${day}/${month}/${year} A LAS ${formattedHours}:${minutes}:${seconds} ${ampm}`;
+
+    // 2. Actas
+    const actas_contabilizadas = d.contabilizadas;
+    const actas_contabilizadas_pct = d.actasContabilizadas;
+    const actas_procesadas = d.contabilizadas + (d.enviadasJee || 0);
+    const totalActas = d.totalActas || 92766;
+    const actas_procesadas_pct = parseFloat(((actas_procesadas / totalActas) * 100).toFixed(3));
+
+    // 3. Candidatos Nacionales
+    const candidates = natParticipantes.data;
+    if (!candidates || candidates.length < 2) {
+      throw new Error('No se recibieron suficientes candidatos en la API Nacional.');
+    }
+    const isAKeiko = candidates[0].nombreCandidato.toUpperCase().includes('FUJIMORI') || candidates[0].nombreAgrupacionPolitica.toUpperCase().includes('FUERZA');
+    const keiko = isAKeiko ? candidates[0] : candidates[1];
+    const roberto = isAKeiko ? candidates[1] : candidates[0];
+
+    const candidato1_nombre = keiko.nombreCandidato.trim();
+    const candidato1_partido = keiko.nombreAgrupacionPolitica.trim();
+    const candidato1_votos = keiko.totalVotosValidos;
+    const candidato1_pct = keiko.porcentajeVotosValidos;
+
+    const candidato2_nombre = roberto.nombreCandidato.trim();
+    const candidato2_partido = roberto.nombreAgrupacionPolitica.trim();
+    const candidato2_votos = roberto.totalVotosValidos;
+    const candidato2_pct = roberto.porcentajeVotosValidos;
+
+    // 4. Extranjero
+    const extranjero_actas_pct = parseFloat(extTotales.data.actasContabilizadas) || 0;
+    let extranjero_k_votos = 0;
+    let extranjero_k_pct = 0;
+    let extranjero_r_votos = 0;
+    let extranjero_r_pct = 0;
+
+    if (extParticipantes.data && extParticipantes.data.length > 0) {
+      extParticipantes.data.forEach(cand => {
+        const isKeikoCand = cand.nombreCandidato.toUpperCase().includes('FUJIMORI') || cand.nombreAgrupacionPolitica.toUpperCase().includes('FUERZA');
+        if (isKeikoCand) {
+          extranjero_k_votos = parseInt(cand.totalVotosValidos, 10) || 0;
+          extranjero_k_pct = parseFloat(cand.porcentajeVotosValidos) || 0;
+        } else {
+          extranjero_r_votos = parseInt(cand.totalVotosValidos, 10) || 0;
+          extranjero_r_pct = parseFloat(cand.porcentajeVotosValidos) || 0;
+        }
+      });
+    }
+
+    return {
+      timestamp_onpe,
+      actas_contabilizadas,
+      actas_contabilizadas_pct,
+      actas_procesadas,
+      actas_procesadas_pct,
+      candidato1_nombre,
+      candidato1_partido,
+      candidato1_votos,
+      candidato1_pct,
+      candidato2_nombre,
+      candidato2_partido,
+      candidato2_votos,
+      candidato2_pct,
+      votos_nulos: 0,
+      votos_nulos_pct: 0,
+      votos_blancos: 0,
+      votos_blancos_pct: 0,
+      extranjero_actas_pct,
+      extranjero_k_votos,
+      extranjero_k_pct,
+      extranjero_r_votos,
+      extranjero_r_pct
+    };
+  } catch (error) {
+    console.error('Error en scrapeONPEViaAPI:', error.message);
+    throw error;
+  }
+}
+
 async function scrapeONPE() {
+  if (process.env.SCRAPER_API_KEY) {
+    return scrapeONPEViaAPI(process.env.SCRAPER_API_KEY);
+  }
+
   console.log('Iniciando Puppeteer...');
   
   const args = ['--no-sandbox', '--disable-setuid-sandbox'];
