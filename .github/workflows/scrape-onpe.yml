@@ -1,0 +1,32 @@
+name: ONPE Scraper Cron Job
+
+on:
+  schedule:
+    # Se ejecuta cada 5 minutos
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    # Permite ejecutarlo manualmente desde la pestaña Actions en GitHub
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Scraper
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+          GITHUB_ACTIONS: 'true'
+        run: node local_scraper.js

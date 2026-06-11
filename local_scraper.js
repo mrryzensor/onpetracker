@@ -53,5 +53,7 @@ async function runWorker() {
 // Ejecutar inmediatamente
 runWorker();
 
-// Programar ciclos continuos
-setInterval(runWorker, INTERVAL_MINUTES * 60 * 1000);
+// Programar ciclos continuos (solo si no estamos en GitHub Actions)
+if (process.env.GITHUB_ACTIONS !== 'true') {
+  setInterval(runWorker, INTERVAL_MINUTES * 60 * 1000);
+}
