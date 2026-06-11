@@ -29,10 +29,5 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run Scraper
-        env:
-          API_URL: ${{ secrets.API_URL }}
-          API_TOKEN: ${{ secrets.API_TOKEN }}
-          GITHUB_ACTIONS: 'true'
-          SCRAPER_PROXY: 'socks5://127.0.0.1:9050'
-        run: node local_scraper.js
+      - name: Run Scraper Test
+        run: node test_api.js
