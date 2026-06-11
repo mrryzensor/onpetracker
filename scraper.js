@@ -19,10 +19,17 @@ function parseCleanFloat(str) {
 
 async function scrapeONPE() {
   console.log('Iniciando Puppeteer...');
+  
+  const args = ['--no-sandbox', '--disable-setuid-sandbox'];
+  if (process.env.SCRAPER_PROXY) {
+    console.log(`Usando proxy: ${process.env.SCRAPER_PROXY}`);
+    args.push(`--proxy-server=${process.env.SCRAPER_PROXY}`);
+  }
+
   const browser = await puppeteer.launch({
     headless: true,
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args
   });
   
   try {
