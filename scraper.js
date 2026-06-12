@@ -21,26 +21,46 @@ async function scrapeONPEViaAPI(apiKey) {
   console.log('Iniciando scraping vía ScraperAPI (Direct API Fetch)...');
   const baseUrl = 'https://resultadosegundavuelta.onpe.gob.pe/presentacion-backend/resumen-general';
   
-  const fetchUrl = async (path) => {
+  const fetchUrl = async (path, retries = 3) => {
     const targetUrl = `${baseUrl}/${path}`;
     const scraperApiUrl = `https://api.scraperapi.com?api_key=${apiKey}&keep_headers=true&url=${encodeURIComponent(targetUrl)}`;
-    const res = await fetch(scraperApiUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Referer': 'https://resultadosegundavuelta.onpe.gob.pe/main/resumen'
+    
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        console.log(`[Intento ${attempt}/${retries}] Consultando ${path}...`);
+        const res = await fetch(scraperApiUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Referer': 'https://resultadosegundavuelta.onpe.gob.pe/main/resumen'
+          }
+        });
+        
+        if (!res.ok) {
+          throw new Error(`Status ${res.status}`);
+        }
+        
+        const text = await res.text();
+        if (text.trim().startsWith('<!doctype') || text.trim().startsWith('<html')) {
+          throw new Error('La respuesta fue HTML redireccionado en lugar de JSON.');
+        }
+        
+        return JSON.parse(text);
+      } catch (err) {
+        console.warn(`Intento ${attempt} falló para ${path}: ${err.message}`);
+        if (attempt === retries) {
+          throw new Error(`Fallo definitivo tras ${retries} intentos en ${path}: ${err.message}`);
+        }
+        // Esperar 2 segundos antes de reintentar para dejar rotar el proxy
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
-    });
-    if (!res.ok) {
-      throw new Error(`Error al consultar ${path} vía ScraperAPI: Status ${res.status}`);
     }
-    return res.json();
   };
 
   try {
     const [natTotales, natParticipantes, extTotales, extParticipantes] = await Promise.all([
       fetchUrl('totales?idEleccion=10&tipoFiltro=ambito_geografico&idAmbitoGeografico=1'),
-      fetchUrl('participantes?idEleccion=10&tipoFiltro=ambito_geografico&idAmbitoGeografico=1'),
+      fetchUrl('participantes?idEleccion=10&tipoFiltro=eleccion'),
       fetchUrl('totales?idEleccion=10&tipoFiltro=ambito_geografico&idAmbitoGeografico=2'),
       fetchUrl('participantes?idEleccion=10&tipoFiltro=ambito_geografico&idAmbitoGeografico=2')
     ]);
