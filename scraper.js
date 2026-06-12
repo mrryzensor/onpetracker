@@ -23,8 +23,14 @@ async function scrapeONPEViaAPI(apiKey) {
   
   const fetchUrl = async (path) => {
     const targetUrl = `${baseUrl}/${path}`;
-    const scraperApiUrl = `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(targetUrl)}`;
-    const res = await fetch(scraperApiUrl);
+    const scraperApiUrl = `https://api.scraperapi.com?api_key=${apiKey}&keep_headers=true&url=${encodeURIComponent(targetUrl)}`;
+    const res = await fetch(scraperApiUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Referer': 'https://resultadosegundavuelta.onpe.gob.pe/main/resumen'
+      }
+    });
     if (!res.ok) {
       throw new Error(`Error al consultar ${path} vía ScraperAPI: Status ${res.status}`);
     }
